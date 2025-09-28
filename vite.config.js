@@ -22,18 +22,15 @@ export default defineConfig({
     },
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-tabs'],
-          router: ['react-router-dom'],
-          supabase: ['@supabase/supabase-js']
-        }
-      }
-    },
+    target: 'es2020',
     chunkSizeWarningLimit: 1000,
     sourcemap: false,
-    minify: 'esbuild'
+    minify: 'esbuild',
+    rollupOptions: {
+      external: [],
+      output: {
+        manualChunks: undefined
+      }
+    }
   }
 }) 
