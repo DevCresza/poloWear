@@ -2,7 +2,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "installCommand": "npm ci --omit=optional",
+  "installCommand": "chmod +x vercel-prebuild.sh && ./vercel-prebuild.sh",
   "routes": [
     {
       "src": "/assets/(.*)",
