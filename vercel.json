@@ -19,13 +19,5 @@
         }
       ]
     }
-  ],
-  "functions": {
-    "app/api/**/*.js": {
-      "runtime": "@vercel/node"
-    }
-  },
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }
