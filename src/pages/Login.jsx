@@ -62,13 +62,6 @@ export default function Login() {
     }
   }
 
-  // Auto-preencher com dados do admin para teste
-  const fillAdminData = () => {
-    setFormData({
-      email: 'admin@polob2b.com',
-      password: 'password123'
-    })
-  }
 
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
@@ -121,23 +114,6 @@ export default function Login() {
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
 
-            <div className="text-center">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={fillAdminData}
-                className="text-xs"
-              >
-                Usar dados Admin (Teste)
-              </Button>
-            </div>
-
-            <div className="text-xs text-gray-500 text-center mt-4">
-              <p><strong>Para teste:</strong></p>
-              <p>Email: admin@polob2b.com</p>
-              <p>Senha: password123</p>
-            </div>
           </form>
         </CardContent>
       </Card>
