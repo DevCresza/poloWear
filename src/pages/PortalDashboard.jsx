@@ -30,7 +30,6 @@ export default function PortalDashboard() {
   });
 
   useEffect(() => {
-    console.log('🔵 Dashboard: Iniciando verificação de usuário...');
 
     // Verificar localStorage diretamente (igual outras páginas)
     const savedSession = localStorage.getItem('userSession');
@@ -40,30 +39,24 @@ export default function PortalDashboard() {
         const sessionAge = Date.now() - session.loginTime;
 
         if (session.isLoggedIn && sessionAge < 3600000) { // 1 hora
-          console.log('✅ Dashboard: Usuário encontrado no localStorage:', session.user);
           setUser(session.user);
           setLoading(false);
 
           if (session.user.role === 'admin') {
-            console.log('🔄 Dashboard: Carregando dados do admin...');
             loadDashboardData().catch((error) => {
-              console.error('❌ Dashboard: Erro ao carregar dados:', error);
             });
           }
         } else {
-          console.log('❌ Dashboard: Sessão expirada');
           localStorage.removeItem('userSession');
           localStorage.removeItem('currentUser');
           setError(true);
           setLoading(false);
         }
       } catch (error) {
-        console.error('❌ Dashboard: Erro ao ler localStorage:', error);
         setError(true);
         setLoading(false);
       }
     } else {
-      console.log('❌ Dashboard: Nenhuma sessão encontrada');
       setError(true);
       setLoading(false);
     }
@@ -71,7 +64,6 @@ export default function PortalDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      console.log('📊 Dashboard: Iniciando carregamento de dados...');
 
       const [contactsResult, pedidosResult, produtosResult] = await Promise.all([
         Contact.find({ order: { column: 'created_at', ascending: false } }),
@@ -79,11 +71,6 @@ export default function PortalDashboard() {
         Produto.find()
       ]);
 
-      console.log('📊 Dashboard: Dados recebidos:', {
-        contacts: contactsResult?.success,
-        pedidos: pedidosResult?.success,
-        produtos: produtosResult?.success
-      });
 
       const contacts = contactsResult.success ? contactsResult.data : [];
       const pedidos = pedidosResult.success ? pedidosResult.data : [];
@@ -134,10 +121,8 @@ export default function PortalDashboard() {
         topProdutos
       });
 
-      console.log('✅ Dashboard: Dados do dashboard carregados com sucesso');
 
     } catch (error) {
-      console.error('❌ Dashboard: Erro ao carregar dados:', error);
     }
   };
 

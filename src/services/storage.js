@@ -22,17 +22,8 @@ class StorageService {
       // Validar tipo do arquivo
       const allowedTypes = options.allowedTypes || ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/bmp']
 
-      console.log('🔍 Storage: Validando arquivo:', {
-        file: file,
-        fileName: file?.name,
-        fileType: file?.type,
-        fileSize: file?.size,
-        fileConstructor: file?.constructor?.name,
-        allowedTypes
-      });
 
       if (!allowedTypes.includes(file.type)) {
-        console.error('❌ Storage: Tipo de arquivo não permitido:', file.type);
         throw new Error(`Tipo de arquivo não permitido: ${file.type}. Tipos aceitos: ${allowedTypes.join(', ')}`)
       }
 
@@ -49,14 +40,12 @@ class StorageService {
 
       if (error) throw error
 
-      console.log('✅ Storage: Upload bem-sucedido:', data);
 
       // Obter URL pública
       const { data: urlData } = supabase.storage
         .from(bucket)
         .getPublicUrl(data.path)
 
-      console.log('📂 Storage: URL público gerada:', urlData.publicUrl);
 
       return handleSupabaseSuccess({
         path: data.path,

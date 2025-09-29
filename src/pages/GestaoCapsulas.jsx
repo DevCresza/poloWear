@@ -34,7 +34,6 @@ export default function GestaoCapsulas() {
       }
 
       setCurrentUser(user);
-      console.log('👤 Usuário atual (Cápsulas):', { id: user.id, role: user.role, fornecedor_id: user.fornecedor_id });
 
       if (user.role === 'admin') {
         // Admin vê todas as cápsulas
@@ -75,11 +74,10 @@ export default function GestaoCapsulas() {
         }
       } else {
         // Usuário sem fornecedor_id não deveria estar aqui
-        console.warn('⚠️ Usuário sem fornecedor_id tentando acessar gestão de cápsulas');
         setCapsulas([]);
       }
     } catch (error) {
-      console.error("Erro ao carregar cápsulas:", error);
+      // Error handled silently
     } finally {
       setLoading(false);
     }
@@ -103,7 +101,6 @@ export default function GestaoCapsulas() {
       showSuccess('Cápsula excluída com sucesso!');
       loadCapsulas();
     } catch (error) {
-      console.error("Erro ao excluir cápsula:", error);
       showError('Falha ao excluir a cápsula.');
     } finally {
       setShowConfirmDialog(false);

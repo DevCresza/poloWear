@@ -46,7 +46,6 @@ class FunctionsService {
       return handleSupabaseSuccess(result)
     } catch (error) {
       // Fallback para dados mock em caso de erro
-      console.warn('Erro na consulta CNPJ, usando dados mock:', error)
       return handleSupabaseSuccess({
         cnpj,
         nome: 'Empresa Demo',
@@ -208,7 +207,6 @@ class FunctionsService {
       return handleSupabaseSuccess(data)
     } catch (error) {
       // Fallback para log em caso de erro
-      console.log('Email seria enviado:', emailData)
       return handleSupabaseSuccess({ sent: true, fallback: true })
     }
   }
@@ -430,7 +428,6 @@ class FunctionsService {
         try {
           itens = JSON.parse(pedido.itens);
         } catch (e) {
-          console.warn('Erro ao fazer parse dos itens:', e);
           itens = [];
         }
       } else if (Array.isArray(pedido.itens)) {

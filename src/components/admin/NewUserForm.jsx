@@ -98,7 +98,7 @@ export default function NewUserForm({
         const fornecedores = fornecedoresResult?.success ? fornecedoresResult.data : [];
         setFornecedores(fornecedores);
       } catch (error) {
-        console.error('Erro ao carregar fornecedores:', error);
+        // Error handled silently
       }
     };
 
@@ -107,7 +107,6 @@ export default function NewUserForm({
         const user = await UserCompat.me();
         setCurrentUser(user);
       } catch (error) {
-        console.error('Erro ao carregar usuário:', error);
         setCurrentUser(null);
       }
     };
@@ -199,7 +198,6 @@ export default function NewUserForm({
         result = data;
       } else {
         // Modo criação - usar novo UserService que cria no Supabase Auth automaticamente
-        console.log('🔄 Criando usuário via User.create():', userData);
 
         // Adicionar senha se fornecida no formulário
         if (formData.password_temporaria) {
@@ -213,7 +211,6 @@ export default function NewUserForm({
         }
 
         result = [createResult.data]; // Manter formato array para compatibilidade
-        console.log('✅ Usuário criado com sucesso:', createResult.data);
 
         // Se for fornecedor, criar entrada na tabela fornecedores
         if (formData.tipo_negocio === 'fornecedor') {
@@ -236,21 +233,19 @@ export default function NewUserForm({
               .eq('id', result[0].id);
 
             if (updateError) {
-              console.error('Erro ao atualizar fornecedor_id:', updateError);
+              // Error handled silently
             }
           }
         }
 
         // Mostrar senha temporária se foi gerada automaticamente
         if (createResult.data.tempPassword) {
-          console.log('🔑 Senha temporária gerada:', createResult.data.tempPassword);
           // Você pode mostrar isso na UI se necessário
         }
       }
 
       onSuccess(formData.full_name);
     } catch (error) {
-      console.error('Erro ao salvar usuário:', error);
       if (onError) {
         onError(error);
       }

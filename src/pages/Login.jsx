@@ -30,15 +30,11 @@ export default function Login() {
     setLoading(true)
     setError('')
 
-    console.log('🔑 Login attempt started with:', { email: formData.email })
 
     try {
-      console.log('📡 Calling User.login...')
       const result = await User.login(formData)
-      console.log('📊 Login result:', result)
 
       if (result && result.user) {
-        console.log('✅ Login successful, user:', result.user)
 
         // Salvar usuário no localStorage para acesso instantâneo
         const userSession = {
@@ -50,24 +46,16 @@ export default function Login() {
         localStorage.setItem('currentUser', JSON.stringify(result.user))
         localStorage.setItem('userSession', JSON.stringify(userSession))
 
-        console.log('💾 User saved to localStorage:', userSession)
 
         // Verificar se salvou corretamente
         const savedCheck = localStorage.getItem('userSession');
-        console.log('✅ localStorage verification:', {
-          saved: !!savedCheck,
-          data: savedCheck ? JSON.parse(savedCheck) : null
-        });
-        console.log('🔄 Redirecting to dashboard...')
 
         // Redirecionamento instantâneo
         navigate(createPageUrl('PortalDashboard'))
       } else {
-        console.log('❌ Login failed - no user in result')
         setError('Login falhou - dados inválidos')
       }
     } catch (err) {
-      console.error('❌ Login error:', err)
       setError(err.message || 'Erro ao fazer login')
     } finally {
       setLoading(false)

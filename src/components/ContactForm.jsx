@@ -46,7 +46,6 @@ export default function ContactForm() {
     setErrorMessage('');
     
     try {
-      console.log('Enviando dados do formulário:', formData);
       
       // Preparar dados para o CRM
       const dadosContato = {
@@ -64,18 +63,15 @@ Faixa de faturamento: ${formData.faixa_faturamento}
 Data do contato: ${new Date().toLocaleString('pt-BR')}`
       };
 
-      console.log('Dados que serão enviados para o CRM:', dadosContato);
 
       // Salvar no CRM (Contact)
       const resultadoContato = await Contact.create(dadosContato);
 
-      console.log('Resultado do salvamento:', resultadoContato);
 
       if (!resultadoContato.success) {
         throw new Error(resultadoContato.error || 'Erro ao salvar no CRM');
       }
 
-      console.log('Contato salvo no CRM com sucesso:', resultadoContato.data);
 
       // Enviar email de notificação para Roberto
       try {
@@ -100,9 +96,7 @@ ORIGEM: Formulário "Vamos Conversar" - Home Page
 Este lead foi automaticamente salvo no CRM para acompanhamento.
 Data: ${new Date().toLocaleString('pt-BR')}`
         });
-        console.log('Email enviado para roberto@polomultimarca.com.br');
       } catch (emailError) {
-        console.error('Erro ao enviar email:', emailError);
         // Não falha o processo se o email não enviar
       }
       
@@ -121,7 +115,6 @@ Data: ${new Date().toLocaleString('pt-BR')}`
       });
       
     } catch (error) {
-      console.error('Erro ao enviar formulário:', error);
       setErrorMessage(error.message || 'Ocorreu um erro ao salvar os dados.');
       setShowErrorDialog(true);
     } finally {

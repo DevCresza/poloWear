@@ -40,7 +40,6 @@ export default function Layout({ children, currentPageName }) {
 
     const checkUser = async () => {
       try {
-        console.log('🔍 Layout: Verificando autenticação...');
 
         // 1. Verificar localStorage primeiro (rápido)
         const savedSession = localStorage.getItem('userSession');
@@ -49,17 +48,14 @@ export default function Layout({ children, currentPageName }) {
           const sessionAge = Date.now() - session.loginTime;
 
           if (session.isLoggedIn && sessionAge < 3600000) { // 1 hora
-            console.log('⚡ Layout: Usuário encontrado no localStorage');
             setCurrentUser(session.user);
             return;
           }
         }
 
         // 2. Se não houver localStorage, verificar Supabase
-        console.log('🔄 Layout: Verificando Supabase...');
         const user = await User.me();
         if (user) {
-          console.log('✅ Layout: Usuário autenticado via Supabase');
           setCurrentUser(user);
 
           // Salvar no localStorage
@@ -69,13 +65,11 @@ export default function Layout({ children, currentPageName }) {
             isLoggedIn: true
           }));
         } else {
-          console.log('❌ Layout: Usuário não autenticado');
           setCurrentUser(null);
           localStorage.removeItem('userSession');
           localStorage.removeItem('currentUser');
         }
       } catch (error) {
-        console.error('🔴 Layout: Erro na autenticação:', error);
         setCurrentUser(null);
         localStorage.removeItem('userSession');
         localStorage.removeItem('currentUser');

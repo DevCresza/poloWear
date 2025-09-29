@@ -71,7 +71,6 @@ export default function GestaoEstoque() {
       }
 
       setUser(currentUser);
-      console.log('👤 Usuário atual (Estoque):', { id: currentUser.id, role: currentUser.role, fornecedor_id: currentUser.fornecedor_id });
 
       let produtosResult, movimentacoesResult, fornecedoresResult;
 
@@ -97,7 +96,6 @@ export default function GestaoEstoque() {
         ]);
       } else {
         // Usuário sem fornecedor_id não deveria estar aqui
-        console.warn('⚠️ Usuário sem fornecedor_id tentando acessar gestão de estoque');
         produtosResult = { success: true, data: [] };
         movimentacoesResult = { success: true, data: [] };
         fornecedoresResult = { success: true, data: [] };
@@ -111,7 +109,6 @@ export default function GestaoEstoque() {
       setMovimentacoes(movimentacoesList || []);
       setFornecedores(fornecedoresList || []);
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
     } finally {
       setLoading(false);
     }
@@ -183,7 +180,6 @@ export default function GestaoEstoque() {
       loadData();
 
     } catch (error) {
-      console.error('Erro ao registrar movimentação:', error);
       showErrorNotification('Erro ao registrar movimentação. Tente novamente.');
     }
   };

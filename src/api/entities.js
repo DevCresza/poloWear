@@ -57,17 +57,14 @@ const createAuthAdapter = (authService) => ({
   },
 
   create: async (data) => {
-    console.log('🔄 UserCompat.create chamado com:', data);
     const result = await User.create(data)
     if (result.success) {
-      console.log('✅ UserCompat.create sucesso:', result.data);
       return {
         id: result.data.id,
         ...result.data,
         tempPassword: result.data.tempPassword // Incluir senha temporária
       }
     }
-    console.error('❌ UserCompat.create erro:', result.error);
     throw new Error(result.error)
   },
 
@@ -89,11 +86,9 @@ const createAuthAdapter = (authService) => ({
 
   // Operações de autenticação
   me: async () => {
-    console.log('🟢 UserCompat.me() called - using real Supabase auth');
     try {
       // Import dinâmico do authService
       const { authService } = await import('@/services/auth');
-      console.log('🔄 Calling authService.me()...');
 
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Timeout after 5 seconds')), 5000)
@@ -104,28 +99,22 @@ const createAuthAdapter = (authService) => ({
         timeoutPromise
       ]);
 
-      console.log('📊 authService.me() result:', { success: result.success, hasData: !!result.data, error: result.error });
 
       if (result.success) {
-        console.log('🟢 Real user authenticated:', result.data);
         return result.data;
       } else {
-        console.log('🟡 authService.me() failed:', result.error);
         return null;
       }
     } catch (error) {
-      console.error('🔴 UserCompat.me() error:', error);
       return null; // Retornar null em vez de throw para evitar loops
     }
   },
 
   login: async (credentials) => {
-    console.log('🔄 UserCompat.login chamado com:', credentials);
 
     try {
       // Import dinâmico do authService
       const { authService } = await import('@/services/auth');
-      console.log('🔍 authService importado:', typeof authService, !!authService?.login);
 
       if (!authService || typeof authService.login !== 'function') {
         throw new Error('authService ou authService.login não está disponível');
@@ -140,7 +129,6 @@ const createAuthAdapter = (authService) => ({
       }
       throw new Error(result.error)
     } catch (importError) {
-      console.error('❌ Erro ao importar authService:', importError);
       throw new Error(`Erro ao importar authService: ${importError.message}`);
     }
   },

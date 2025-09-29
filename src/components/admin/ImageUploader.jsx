@@ -7,36 +7,26 @@ export default function ImageUploader({ imageUrl, onUploadComplete, onRemove }) 
   const [uploading, setUploading] = useState(false);
 
   const handleFileChange = async (e) => {
-    console.log('🔄 ImageUploader: handleFileChange chamado');
     const file = e.target.files[0];
-    console.log('📁 ImageUploader: Arquivo selecionado:', file);
 
     if (!file) {
-      console.log('❌ ImageUploader: Nenhum arquivo selecionado, saindo...');
       return;
     }
 
     setUploading(true);
     try {
-      console.log('🔄 ImageUploader: Iniciando upload...', file.name);
       const result = await UploadFile(file, { folder: 'produtos' });
-      console.log('✅ ImageUploader: Upload completo:', result);
 
       if (result && result.url) {
-        console.log('✅ ImageUploader: URL encontrada:', result.url);
         try {
-          console.log('🔄 ImageUploader: Chamando onUploadComplete...');
           onUploadComplete(result.url);
-          console.log('✅ ImageUploader: onUploadComplete executado com sucesso');
         } catch (callbackError) {
-          console.error('❌ ImageUploader: Erro no onUploadComplete:', callbackError);
           throw callbackError;
         }
       } else {
         throw new Error('URL não encontrada na resposta');
       }
     } catch (error) {
-      console.error("❌ ImageUploader: Upload failed:", error);
       // Removido alert para não interferir na navegação
     } finally {
       setUploading(false);

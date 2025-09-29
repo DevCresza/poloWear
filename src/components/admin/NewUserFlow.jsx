@@ -36,7 +36,6 @@ export default function NewUserFlow({ onSuccess, onCancel }) {
         const currentUser = await User.me();
         completeUserData.convidado_por = currentUser.id;
       } catch (error) {
-        console.log('Não foi possível identificar o usuário atual');
       }
 
       // Criar usuário pendente
@@ -45,7 +44,6 @@ export default function NewUserFlow({ onSuccess, onCancel }) {
       setStep('success');
 
     } catch (error) {
-      console.error('Erro ao criar usuário:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Ocorreu um erro desconhecido.';
       showError(`Falha ao criar usuário: ${errorMessage}`);
     } finally {

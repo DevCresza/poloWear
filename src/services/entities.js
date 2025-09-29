@@ -246,7 +246,6 @@ class UserService extends BaseService {
       let authData;
 
       // 1. Tentar criar no Supabase Auth
-      console.log('🔐 Verificando/criando usuário no Supabase Auth:', userData.email);
 
       const { data: signUpData, error: authError } = await supabase.auth.signUp({
         email: userData.email,
@@ -262,18 +261,14 @@ class UserService extends BaseService {
 
       if (authError) {
         if (authError.message === 'User already registered') {
-          console.log('🔄 Usuário já existe no Auth, não é possível criar...');
-
           // Se o usuário já existe no Auth, não podemos criar um novo
           // O admin precisa excluir do Auth primeiro ou usar email diferente
           throw new Error(`O email "${userData.email}" já está registrado no Supabase Auth. Para criar este usuário, primeiro exclua-o do Auth através do painel do Supabase ou use um email diferente.`);
         } else {
-          console.error('❌ Erro ao criar usuário no Auth:', authError);
           throw authError;
         }
       } else {
         authData = signUpData;
-        console.log('✅ Usuário criado no Auth:', authData.user.id);
       }
 
       // 2. Depois criar na tabela users usando o ID do Auth
@@ -304,12 +299,9 @@ class UserService extends BaseService {
       let result;
 
       // Verificar se o usuário já existe na tabela users (por email ou ID)
-      console.log('🔍 Verificando se usuário já existe na tabela users...');
-
       // Verificar por email
       const existingUserByEmail = await super.find({ filters: { email: userData.email } });
       if (existingUserByEmail.success && existingUserByEmail.data.length > 0) {
-        console.log('⚠️ Usuário já existe na tabela users (por email):', existingUserByEmail.data[0]);
         return handleSupabaseError(new Error('Usuário com este email já existe no sistema'));
       }
 
@@ -317,12 +309,9 @@ class UserService extends BaseService {
       if (authData?.user?.id) {
         const existingUserById = await super.find({ filters: { id: authData.user.id } });
         if (existingUserById.success && existingUserById.data.length > 0) {
-          console.log('⚠️ Usuário já existe na tabela users (por ID):', existingUserById.data[0]);
           return handleSupabaseError(new Error(`Usuário com ID ${authData.user.id} já existe no sistema`));
         }
       }
-
-      console.log('✅ Criando novo registro na tabela users...');
       result = await super.create(userRecord);
 
       if (result.success) {
@@ -335,7 +324,6 @@ class UserService extends BaseService {
       }
 
     } catch (error) {
-      console.error('❌ Erro ao criar usuário:', error);
       return handleSupabaseError(error);
     }
   }
@@ -359,28 +347,22 @@ class UserService extends BaseService {
   // Exclusão completa do usuário (usando Edge Function)
   async deleteComplete(userId) {
     try {
-      console.log('🗑️ Iniciando exclusão completa do usuário via Edge Function:', userId);
-
       // Chamar a Edge Function para exclusão completa
       const { data, error } = await supabase.functions.invoke('delete-user-complete', {
         body: { userId }
       });
 
       if (error) {
-        console.error('❌ Erro na Edge Function:', error);
         return handleSupabaseError(error);
       }
 
       if (!data.success) {
-        console.error('❌ Edge Function retornou erro:', data.error);
         return handleSupabaseError(new Error(data.error));
       }
 
-      console.log('✅ Exclusão completa finalizada via Edge Function:', data);
       return handleSupabaseSuccess(data);
 
     } catch (error) {
-      console.error('❌ Erro na exclusão completa:', error);
       return handleSupabaseError(error);
     }
   }

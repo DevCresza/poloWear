@@ -4,31 +4,18 @@ class AuthService {
   // Login com email e senha
   async login(email, password) {
     try {
-      console.log('🔐 AuthService.login called with:', { email, passwordProvided: !!password })
 
       // Primeiro, faz login com Supabase Auth
-      console.log('📡 Calling supabase.auth.signInWithPassword...')
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password
       })
 
-      console.log('📊 Supabase auth response:', {
-        hasData: !!authData,
-        hasUser: !!authData?.user,
-        hasSession: !!authData?.session,
-        sessionAccessToken: !!authData?.session?.access_token,
-        error: authError?.message
-      })
 
       if (authError) throw authError
 
       // Verificar se a sessão foi realmente salva
       const savedSession = await supabase.auth.getSession()
-      console.log('🔍 Session after login:', {
-        hasSavedSession: !!savedSession.data.session,
-        sessionId: savedSession.data.session?.access_token?.slice(-8)
-      })
 
       // Busca dados completos do usuário na tabela users
       const { data: userData, error: userError } = await supabase
@@ -102,18 +89,14 @@ class AuthService {
   // Recuperar dados do usuário atual
   async me() {
     try {
-      console.log('🔍 AuthService.me() iniciado')
 
       // Verificar se há sessão no localStorage primeiro
       const session = await supabase.auth.getSession()
-      console.log('🔍 Session check:', { hasSession: !!session.data.session, sessionError: session.error?.message })
 
       if (!session.data.session) {
-        console.log('❌ Nenhuma sessão encontrada')
         throw new Error('Usuário não autenticado - sem sessão')
       }
 
-      console.log('📡 Chamando supabase.auth.getUser()...')
 
       // Adicionar timeout manual para getUser
       const getUserPromise = supabase.auth.getUser()
@@ -123,28 +106,22 @@ class AuthService {
 
       const { data: { user }, error: authError } = await Promise.race([getUserPromise, timeoutPromise])
 
-      console.log('📊 supabase.auth.getUser() result:', { hasUser: !!user, authError: authError?.message })
 
       if (authError || !user) {
-        console.log('❌ Usuário não autenticado:', authError?.message || 'No user')
         throw new Error('Usuário não autenticado')
       }
 
-      console.log('✅ Usuário auth encontrado:', user.id, user.email)
 
       // Busca dados completos na tabela users
-      console.log('🔍 Buscando dados na tabela users...')
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('id', user.id)
         .single()
 
-      console.log('📊 Query tabela users result:', { hasData: !!userData, userError: userError?.message })
 
       if (userError) {
         // Se não encontrar o usuário na tabela, criar registro
-        console.log('🟡 Usuário auth encontrado mas não na tabela users, criando registro...')
         const newUserData = {
           id: user.id,
           full_name: user.user_metadata?.full_name || user.email,
@@ -162,14 +139,11 @@ class AuthService {
           .single()
 
         if (createError) throw createError
-        console.log('✅ Usuário criado na tabela users:', createdUser)
         return handleSupabaseSuccess(createdUser)
       }
 
-      console.log('✅ AuthService.me() sucesso:', userData)
       return handleSupabaseSuccess(userData)
     } catch (error) {
-      console.error('❌ AuthService.me() erro:', error)
       return handleSupabaseError(error)
     }
   }

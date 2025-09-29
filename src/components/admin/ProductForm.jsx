@@ -58,12 +58,9 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
 
   const loadFornecedores = useCallback(async () => {
     try {
-      console.log('🔄 ProductForm: Carregando fornecedores...');
       const fornecedoresResult = await Fornecedor.find();
       const fornecedores = fornecedoresResult?.success ? fornecedoresResult.data : [];
 
-      console.log('✅ ProductForm: Fornecedores carregados:', fornecedores.length);
-      console.log('📝 ProductForm: Dados dos fornecedores:', fornecedores.map(f => ({ id: f.id, marca: f.nome_marca })));
       setFornecedores(fornecedores);
 
       if (!produto && fornecedores.length > 0) {
@@ -74,7 +71,7 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
         }));
       }
     } catch (error) {
-      console.error('Erro ao carregar fornecedores:', error);
+      // Error handled silently
     }
   }, [produto]);
 
@@ -206,16 +203,10 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
         estoque_minimo_grades: parseInt(formData.estoque_minimo_grades) || 0
       };
 
-      console.log('🔍 Dados do produto sendo enviados:', dadosProduto);
-      console.log('🎯 Modo de operação:', produto ? 'UPDATE' : 'CREATE');
-      console.log('🆔 ID do produto (se update):', produto?.id);
-
       if (produto) {
         const result = await Produto.update(produto.id, dadosProduto);
-        console.log('✅ Resultado do update:', result);
       } else {
         const result = await Produto.create(dadosProduto);
-        console.log('✅ Resultado do create:', result);
       }
       
       showSuccess(produto ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
@@ -223,14 +214,6 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
         onSuccess();
       }, 1500);
     } catch (error) {
-      console.error('❌ Erro ao salvar produto:', error);
-      console.error('❌ Detalhes do erro:', {
-        message: error.message,
-        name: error.name,
-        stack: error.stack,
-        response: error.response,
-        data: error.data
-      });
 
       let errorMessage = 'Erro ao salvar produto. Tente novamente.';
 
@@ -283,7 +266,6 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
                   </SelectTrigger>
                   <SelectContent>
                     {fornecedores.map((fornecedor, index) => {
-                      console.log(`🏷️ ProductForm Select Marca - Índice: ${index}, ID: ${fornecedor.id}, Marca: ${fornecedor.nome_marca}`);
                       return (
                         <SelectItem key={`marca-${fornecedor.id}`} value={fornecedor.nome_marca}>
                           {fornecedor.nome_marca}

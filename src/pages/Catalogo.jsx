@@ -61,7 +61,7 @@ export default function Catalogo() {
       });
       setCapsulas(capsulas);
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
+      // Error handled silently
     } finally {
       setLoading(false);
     }
@@ -121,13 +121,11 @@ export default function Catalogo() {
 
   const handleAddToCart = (produto) => {
     try {
-      console.log('🛒 Iniciando adição ao carrinho:', produto);
 
       // Carregar carrinho existente do localStorage
       const carrinhoSalvo = localStorage.getItem('carrinho');
       const carrinho = carrinhoSalvo ? JSON.parse(carrinhoSalvo) : [];
 
-      console.log('🛒 Carrinho atual:', carrinho);
 
       // Verificar se produto já existe no carrinho
       const itemExistente = carrinho.find(item => item.id === produto.id);
@@ -140,28 +138,21 @@ export default function Catalogo() {
             ? { ...item, quantidade: item.quantidade + 1 }
             : item
         );
-        console.log('🛒 Produto já existe, atualizando quantidade');
       } else {
         // Adicionar novo produto ao carrinho
         novoCarrinho = [...carrinho, { ...produto, quantidade: 1 }];
-        console.log('🛒 Adicionando novo produto ao carrinho');
       }
 
       // Salvar no localStorage
       localStorage.setItem('carrinho', JSON.stringify(novoCarrinho));
-      console.log('🛒 Carrinho salvo no localStorage:', novoCarrinho);
 
       // Verificar se foi salvo corretamente
       const verificacao = localStorage.getItem('carrinho');
-      console.log('🛒 Verificação do localStorage:', verificacao);
-
-      console.log(`✅ Produto "${produto.nome}" adicionado ao carrinho!`);
 
       // Mostrar notificação de sucesso
       showSuccessNotification(`Produto "${produto.nome}" adicionado ao carrinho!`);
 
     } catch (error) {
-      console.error('❌ Erro ao adicionar produto ao carrinho:', error);
       showSuccessNotification('Erro ao adicionar produto ao carrinho. Tente novamente.');
     }
   };

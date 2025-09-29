@@ -38,7 +38,6 @@ export default function GestaoProdutos() {
   const loadData = async () => {
     setLoading(true);
     try {
-      console.log('🔄 GestaoProdutos: Carregando dados...');
 
       // Primeiro, obter o usuário atual
       const user = await UserCompat.me();
@@ -47,7 +46,6 @@ export default function GestaoProdutos() {
       }
 
       setCurrentUser(user);
-      console.log('👤 Usuário atual:', { id: user.id, role: user.role, fornecedor_id: user.fornecedor_id });
 
       let produtosResult, fornecedoresResult;
 
@@ -68,17 +66,10 @@ export default function GestaoProdutos() {
         ]);
       } else {
         // Usuário sem fornecedor_id (multimarca) não deveria estar aqui
-        console.warn('⚠️ Usuário sem fornecedor_id tentando acessar gestão de produtos');
         produtosResult = { success: true, data: [] };
         fornecedoresResult = { success: true, data: [] };
       }
 
-      console.log('📊 GestaoProdutos: Resultados:', {
-        produtos: produtosResult?.success,
-        fornecedores: fornecedoresResult?.success,
-        userRole: user.role,
-        fornecedorId: user.fornecedor_id
-      });
 
       const produtos = produtosResult?.success ? produtosResult.data : [];
       const fornecedores = fornecedoresResult?.success ? fornecedoresResult.data : [];
@@ -86,9 +77,8 @@ export default function GestaoProdutos() {
       setProdutos(produtos);
       setFornecedores(fornecedores);
 
-      console.log('✅ GestaoProdutos: Dados carregados:', { produtos: produtos.length, fornecedores: fornecedores.length });
     } catch (error) {
-      console.error("Erro ao carregar dados:", error);
+      // Error handled silently
     } finally {
       setLoading(false);
     }
@@ -110,7 +100,6 @@ export default function GestaoProdutos() {
       await Produto.update(produto.id, { is_destaque: isChecked });
       loadData();
     } catch (error) {
-      console.error("Erro ao atualizar destaque:", error);
       notification.showError("Falha ao atualizar o status de destaque do produto.");
     }
   };
@@ -120,7 +109,6 @@ export default function GestaoProdutos() {
       await Produto.update(produto.id, { ativo: isChecked });
       loadData();
     } catch (error) {
-      console.error("Erro ao atualizar status:", error);
       notification.showError("Falha ao atualizar o status do produto.");
     }
   };

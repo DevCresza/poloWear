@@ -49,7 +49,6 @@ export default function PedidosFornecedor() {
       }
 
       setUser(currentUser);
-      console.log('👤 Usuário atual (Pedidos):', { id: currentUser.id, role: currentUser.role, fornecedor_id: currentUser.fornecedor_id });
 
       // Carregar pedidos (apenas do fornecedor logado)
       let pedidosResult;
@@ -65,7 +64,6 @@ export default function PedidosFornecedor() {
           order: { column: 'created_date', ascending: false }
         });
       } else {
-        console.warn('⚠️ Usuário sem fornecedor_id tentando acessar pedidos de fornecedor');
         pedidosResult = { success: true, data: [] };
       }
 
@@ -79,7 +77,6 @@ export default function PedidosFornecedor() {
         const usersData = Array.isArray(usersResult) ? usersResult : [];
         setUsers(usersData);
       } catch (userError) {
-        console.warn('Erro ao carregar usuários (não crítico):', userError);
         setUsers([]); // Define como array vazio se falhar
       }
 
@@ -89,12 +86,10 @@ export default function PedidosFornecedor() {
         const fornecedoresData = fornecedoresResult.success ? fornecedoresResult.data : [];
         setFornecedores(fornecedoresData);
       } catch (fornecedorError) {
-        console.warn('Erro ao carregar fornecedores (não crítico):', fornecedorError);
         setFornecedores([]);
       }
 
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
       setAuthError(true);
     } finally {
       setLoading(false);
@@ -260,7 +255,6 @@ export default function PedidosFornecedor() {
         newWindow.document.close();
       }
     } catch (error) {
-      console.error('Erro no export:', error);
       notification.showError('Erro ao exportar dados.');
     }
   };

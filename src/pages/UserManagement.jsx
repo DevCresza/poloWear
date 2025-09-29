@@ -95,7 +95,7 @@ export default function UserManagement() {
       setFornecedores(fornecedores);
       setFornecedorMap(new Map(fornecedores.map(f => [f.id, f.nome_marca])));
     } catch(error) {
-      console.error("Erro ao carregar dados", error);
+      // Error handled silently
     } finally {
       setLoading(false);
     }
@@ -137,8 +137,7 @@ export default function UserManagement() {
       if (error) throw error;
       await loadData();
     } catch (error) {
-      console.error('Falha ao atualizar função:', error);
-      console.error('Não foi possível atualizar a função do usuário.');
+      // Error handled silently
     } finally {
       setUpdatingUserId(null);
     }
@@ -150,7 +149,7 @@ export default function UserManagement() {
   };
 
   const openDashboard = () => {
-    console.log('Funcionalidade de painel administrativo será implementada em breve.');
+    // Dashboard functionality placeholder
   };
 
   const copyInviteInfo = (pendingUser) => {
@@ -183,17 +182,14 @@ export default function UserManagement() {
   const confirmDelete = async () => {
     const { userId, userName, user } = userToDelete;
     try {
-      console.log('🗑️ Iniciando exclusão completa do usuário:', userId, userName);
 
       // Usar o novo método deleteComplete do UserService
       const result = await User.deleteComplete(userId);
 
       if (result.success) {
-        console.log('✅ Usuário excluído com sucesso:', result.data);
 
         // Verificar se houve warnings
         if (result.data.warnings && result.data.warnings.length > 0) {
-          console.warn('⚠️ Avisos durante a exclusão:', result.data.warnings);
 
           // Verificar se o aviso é sobre Auth
           const hasAuthWarning = result.data.warnings.some(w => w.includes('Auth:'));
@@ -212,7 +208,6 @@ export default function UserManagement() {
         throw new Error(result.error);
       }
     } catch (error) {
-      console.error("❌ Erro ao excluir usuário:", error);
       showErrorNotification(`Falha ao excluir o usuário "${userName}". ${error.message}`);
     } finally {
       setShowDeleteModal(false);

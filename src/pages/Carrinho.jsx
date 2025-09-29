@@ -40,12 +40,9 @@ export default function Carrinho() {
         User.me()
       ]);
       const fornecedores = fornecedoresResult.success ? fornecedoresResult.data : [];
-      console.log('📋 Fornecedores carregados:', fornecedores);
-      console.log('📋 Total de fornecedores:', fornecedores.length);
       setFornecedores(fornecedores);
       setUser(currentUser);
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
     }
   };
 
@@ -106,7 +103,6 @@ export default function Carrinho() {
 
     // Só processar se o fornecedor existir
     if (!fornecedor) {
-      console.warn(`Fornecedor não encontrado para produto:`, item);
       return acc;
     }
 
@@ -189,7 +185,6 @@ export default function Carrinho() {
       }, 3000);
 
     } catch (error) {
-      console.error('Erro ao finalizar pedido:', error);
       showError('Erro ao finalizar pedido. Tente novamente.');
     } finally {
       setLoading(false);
