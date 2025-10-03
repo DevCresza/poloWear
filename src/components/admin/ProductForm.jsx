@@ -182,14 +182,26 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (formData.tipo_venda === 'grade' && formData.grade_configuracao.tamanhos_disponiveis.length === 0) {
       showError('Adicione pelo menos um tamanho à grade do produto');
       return;
     }
-    
+
+    // Validar se há fornecedores cadastrados
+    if (fornecedores.length === 0) {
+      showError('Não há fornecedores cadastrados. Por favor, cadastre um fornecedor antes de adicionar produtos. Acesse: Admin > Gestão de Fornecedores');
+      return;
+    }
+
+    // Validar se um fornecedor foi selecionado
+    if (!formData.fornecedor_id) {
+      showError('Por favor, selecione um fornecedor para o produto.');
+      return;
+    }
+
     setLoading(true);
-    
+
     try {
       const dadosProduto = {
         ...formData,
@@ -203,12 +215,18 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
         estoque_minimo_grades: parseInt(formData.estoque_minimo_grades) || 0
       };
 
+      let result;
       if (produto) {
-        const result = await Produto.update(produto.id, dadosProduto);
+        result = await Produto.update(produto.id, dadosProduto);
       } else {
-        const result = await Produto.create(dadosProduto);
+        result = await Produto.create(dadosProduto);
       }
-      
+
+      // VERIFICAR SE A OPERAÇÃO FOI BEM-SUCEDIDA
+      if (!result || !result.success) {
+        throw new Error(result?.error || 'Falha ao salvar produto no banco de dados');
+      }
+
       showSuccess(produto ? 'Produto atualizado com sucesso!' : 'Produto cadastrado com sucesso!');
       setTimeout(() => {
         onSuccess();
@@ -222,8 +240,8 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
           errorMessage = 'Dados inválidos: verifique os campos tipo_venda e temporada.';
         } else if (error.message.includes('duplicate key')) {
           errorMessage = 'Produto com esses dados já existe.';
-        } else if (error.message.includes('foreign key')) {
-          errorMessage = 'Fornecedor selecionado é inválido.';
+        } else if (error.message.includes('foreign key') || error.message.includes('fornecedor')) {
+          errorMessage = 'Fornecedor selecionado é inválido ou foi removido. Por favor, selecione outro fornecedor ou cadastre um novo em: Admin > Gestão de Fornecedores';
         } else {
           errorMessage = `Erro: ${error.message}`;
         }
