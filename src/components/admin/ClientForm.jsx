@@ -16,7 +16,8 @@ export default function ClientForm({ user, onSuccess, onCancel, clientMode = fal
     full_name: '',
     email: '',
     password: '',
-    role: clientMode ? 'multimarca' : 'multimarca'
+    role: clientMode ? 'multimarca' : 'multimarca',
+    tipo_negocio: clientMode ? 'multimarca' : 'multimarca'
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +30,8 @@ export default function ClientForm({ user, onSuccess, onCancel, clientMode = fal
         full_name: user.full_name || '',
         email: user.email || '',
         password: '',
-        role: user.role || 'multimarca'
+        role: user.role || 'multimarca',
+        tipo_negocio: user.tipo_negocio || user.role || 'multimarca'
       });
     }
   }, [user]);
@@ -83,7 +85,8 @@ export default function ClientForm({ user, onSuccess, onCancel, clientMode = fal
         const dataToSubmit = {
           full_name: formData.full_name,
           email: formData.email,
-          role: formData.role
+          role: formData.role,
+          tipo_negocio: formData.tipo_negocio || formData.role
         };
 
         if (formData.password && formData.password.trim() !== '') {
@@ -187,7 +190,10 @@ export default function ClientForm({ user, onSuccess, onCancel, clientMode = fal
             {!clientMode && (
               <div className="space-y-2">
                 <Label htmlFor="role">Função no Sistema *</Label>
-                <Select value={formData.role} onValueChange={value => setFormData({...formData, role: value})}>
+                <Select
+                  value={formData.role}
+                  onValueChange={value => setFormData({...formData, role: value, tipo_negocio: value})}
+                >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="multimarca">Multimarca</SelectItem>
