@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch'; // Import Switch component
 import { Fornecedor } from '@/api/entities';
+import { User } from '@/api/entities';
 import { useNotification } from '@/hooks/useNotification';
 import { Notification } from '@/components/ui/notification';
 import { Building, DollarSign, Mail, Phone, User as UserIcon, Shield } from 'lucide-react'; // Import Shield icon
@@ -16,6 +17,7 @@ export default function FornecedorForm({ fornecedor, onSuccess, onCancel }) {
     nome_marca: '',
     razao_social: '',
     cnpj: '',
+    responsavel_user_id: '', // Campo obrigatório
     pedido_minimo_valor: 0,
     email_fornecedor: '', // New field
     senha_fornecedor: '', // New field
@@ -28,6 +30,7 @@ export default function FornecedorForm({ fornecedor, onSuccess, onCancel }) {
     contato_financeiro_telefone: ''
   });
   const [loading, setLoading] = useState(false);
+  const [usuarios, setUsuarios] = useState([]);
 
   const {
     showSuccess,
@@ -37,10 +40,39 @@ export default function FornecedorForm({ fornecedor, onSuccess, onCancel }) {
     notificationType
   } = useNotification();
 
+  // Carregar usuários ao montar o componente
+  useEffect(() => {
+    const loadUsuarios = async () => {
+      try {
+        const result = await User.find({
+          filters: { ativo: true },
+          order: { column: 'full_name', ascending: true }
+        });
+
+        if (result.success && result.data) {
+          setUsuarios(result.data);
+
+          // Se estiver criando novo fornecedor e houver usuários, selecionar o primeiro
+          if (!fornecedor && result.data.length > 0) {
+            setFormData(prev => ({
+              ...prev,
+              responsavel_user_id: result.data[0].id
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar usuários:', error);
+      }
+    };
+
+    loadUsuarios();
+  }, [fornecedor]);
+
   useEffect(() => {
     if (fornecedor) {
       setFormData({
         ...fornecedor,
+        responsavel_user_id: fornecedor.responsavel_user_id || '',
         pedido_minimo_valor: fornecedor.pedido_minimo_valor || 0,
         email_fornecedor: fornecedor.email_fornecedor || '', // Initialize new field
         senha_fornecedor: fornecedor.senha_fornecedor || '', // Initialize new field
@@ -57,6 +89,13 @@ export default function FornecedorForm({ fornecedor, onSuccess, onCancel }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validar campo obrigatório
+    if (!formData.responsavel_user_id) {
+      showError('Por favor, selecione um usuário responsável pelo fornecedor.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -91,6 +130,8 @@ export default function FornecedorForm({ fornecedor, onSuccess, onCancel }) {
           errorMessage = 'Já existe um fornecedor com este CNPJ ou email.';
         } else if (error.message.includes('violates check constraint')) {
           errorMessage = 'Dados inválidos. Verifique os campos preenchidos.';
+        } else if (error.message.includes('foreign key') || error.message.includes('responsavel_user_id')) {
+          errorMessage = 'Usuário responsável selecionado é inválido.';
         } else {
           errorMessage = `Erro: ${error.message}`;
         }
@@ -125,8 +166,27 @@ export default function FornecedorForm({ fornecedor, onSuccess, onCancel }) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="razao_social">Razão Social</Label>
+                <Label htmlFor="razao_social">Razão Social *</Label>
                 <Input id="razao_social" value={formData.razao_social} onChange={e => setFormData({...formData, razao_social: e.target.value})} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="responsavel_user_id">Usuário Responsável *</Label>
+                <Select
+                  value={formData.responsavel_user_id}
+                  onValueChange={(value) => setFormData({...formData, responsavel_user_id: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um usuário responsável" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {usuarios.map(usuario => (
+                      <SelectItem key={usuario.id} value={usuario.id}>
+                        {usuario.full_name} ({usuario.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-600">Usuário do sistema responsável por este fornecedor</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cnpj">CNPJ</Label>
