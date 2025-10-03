@@ -196,6 +196,28 @@ export default function NewUserForm({
 
         if (error) throw error;
         result = data;
+
+        // Se mudou para fornecedor e não tem fornecedor vinculado, criar registro de fornecedor
+        if (formData.tipo_negocio === 'fornecedor' && !editingUser.fornecedor_id) {
+          const fornecedorData = {
+            nome_marca: formData.nome_empresa || formData.full_name,
+            razao_social: formData.nome_empresa || formData.full_name,
+            cnpj: formData.cnpj || null,
+            responsavel_user_id: editingUser.id,
+            email_fornecedor: formData.email,
+            ativo_fornecedor: true,
+            pedido_minimo_valor: 0
+          };
+
+          const fornecedorResult = await Fornecedor.create(fornecedorData);
+
+          if (fornecedorResult?.success && fornecedorResult.data) {
+            await supabase
+              .from('users')
+              .update({ fornecedor_id: fornecedorResult.data.id })
+              .eq('id', editingUser.id);
+          }
+        }
       } else {
         // Modo criação - usar novo UserService que cria no Supabase Auth automaticamente
 
@@ -215,13 +237,13 @@ export default function NewUserForm({
         // Se for fornecedor, criar entrada na tabela fornecedores
         if (formData.tipo_negocio === 'fornecedor') {
           const fornecedorData = {
-            nome_marca: 'Polo Wear',
-            razao_social: formData.nome_empresa,
-            cnpj: formData.cnpj,
+            nome_marca: formData.nome_empresa || formData.full_name,
+            razao_social: formData.nome_empresa || formData.full_name,
+            cnpj: formData.cnpj || null,
             responsavel_user_id: result[0].id,
             email_fornecedor: formData.email,
             ativo_fornecedor: true,
-            pedido_minimo_valor: 500
+            pedido_minimo_valor: 0
           };
 
           const fornecedorResult = await Fornecedor.create(fornecedorData);
@@ -233,7 +255,7 @@ export default function NewUserForm({
               .eq('id', result[0].id);
 
             if (updateError) {
-              // Error handled silently
+              console.warn('Erro ao vincular fornecedor ao usuário:', updateError);
             }
           }
         }
