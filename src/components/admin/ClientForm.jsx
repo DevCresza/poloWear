@@ -100,6 +100,30 @@ export default function ClientForm({ user, onSuccess, onCancel, clientMode = fal
 
         if (error) throw error;
 
+        // Se mudou para fornecedor e não tem fornecedor vinculado, criar registro de fornecedor
+        if (formData.role === 'fornecedor' && !user.fornecedor_id) {
+          const { data: fornecedorData, error: fornecedorError } = await supabase
+            .from('fornecedores')
+            .insert([{
+              nome_marca: formData.full_name,
+              razao_social: formData.full_name,
+              responsavel_user_id: user.id,
+              email_fornecedor: formData.email,
+              pedido_minimo_valor: 0,
+              ativo_fornecedor: true
+            }])
+            .select()
+            .single();
+
+          if (!fornecedorError && fornecedorData) {
+            // Vincular fornecedor ao usuário
+            await supabase
+              .from('users')
+              .update({ fornecedor_id: fornecedorData.id })
+              .eq('id', user.id);
+          }
+        }
+
         notification.showSuccess('Usuário atualizado com sucesso!');
       }
       
