@@ -16,7 +16,6 @@ export default function FornecedorForm({ fornecedor, onSuccess, onCancel }) {
     nome_marca: '',
     razao_social: '',
     cnpj: '',
-    responsavel_interno: '',
     pedido_minimo_valor: 0,
     email_fornecedor: '', // New field
     senha_fornecedor: '', // New field
@@ -51,8 +50,7 @@ export default function FornecedorForm({ fornecedor, onSuccess, onCancel }) {
         contato_envio_telefone: fornecedor.contato_envio_telefone || '',
         contato_financeiro_nome: fornecedor.contato_financeiro_nome || '',
         contato_financeiro_email: fornecedor.contato_financeiro_email || '',
-        contato_financeiro_telefone: fornecedor.contato_financeiro_telefone || '',
-        responsavel_interno: fornecedor.responsavel_interno || ''
+        contato_financeiro_telefone: fornecedor.contato_financeiro_telefone || ''
       });
     }
   }, [fornecedor]);
@@ -60,24 +58,45 @@ export default function FornecedorForm({ fornecedor, onSuccess, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       const dataToSave = {
         ...formData,
         pedido_minimo_valor: parseFloat(formData.pedido_minimo_valor) || 0
       };
 
+      let result;
       if (fornecedor) {
-        await Fornecedor.update(fornecedor.id, dataToSave);
-        showSuccess('Fornecedor atualizado com sucesso!');
+        result = await Fornecedor.update(fornecedor.id, dataToSave);
       } else {
-        await Fornecedor.create(dataToSave);
-        showSuccess('Fornecedor criado com sucesso!');
+        result = await Fornecedor.create(dataToSave);
       }
-      onSuccess();
+
+      // Verificar se a operação foi bem-sucedida
+      if (!result || !result.success) {
+        throw new Error(result?.error || 'Falha ao salvar fornecedor no banco de dados');
+      }
+
+      showSuccess(fornecedor ? 'Fornecedor atualizado com sucesso!' : 'Fornecedor criado com sucesso!');
+      setTimeout(() => {
+        onSuccess();
+      }, 1500);
     } catch (error) {
       console.error('Erro ao salvar fornecedor:', error);
-      showError('Falha ao salvar fornecedor. Verifique os campos.');
+
+      let errorMessage = 'Falha ao salvar fornecedor. Verifique os campos.';
+
+      if (error.message) {
+        if (error.message.includes('duplicate key') || error.message.includes('unique')) {
+          errorMessage = 'Já existe um fornecedor com este CNPJ ou email.';
+        } else if (error.message.includes('violates check constraint')) {
+          errorMessage = 'Dados inválidos. Verifique os campos preenchidos.';
+        } else {
+          errorMessage = `Erro: ${error.message}`;
+        }
+      }
+
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -102,16 +121,6 @@ export default function FornecedorForm({ fornecedor, onSuccess, onCancel }) {
                   value={formData.nome_marca}
                   onChange={e => setFormData({...formData, nome_marca: e.target.value})}
                   placeholder="Digite o nome da marca"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="responsavel_interno">Responsável Interno</Label>
-                <Input
-                  id="responsavel_interno"
-                  value={formData.responsavel_interno}
-                  onChange={e => setFormData({...formData, responsavel_interno: e.target.value})}
-                  placeholder="Digite o nome do responsável interno"
                   required
                 />
               </div>
