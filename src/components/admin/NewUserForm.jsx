@@ -329,7 +329,10 @@ export default function NewUserForm({
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="role">Função no Sistema</Label>
-                  <Select value={formData.role} onValueChange={value => setFormData({...formData, role: value})}>
+                  <Select
+                    value={formData.role}
+                    onValueChange={value => setFormData({...formData, role: value, tipo_negocio: value})}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -344,7 +347,7 @@ export default function NewUserForm({
                   <Label htmlFor="tipo_negocio">Tipo de Negócio</Label>
                   <Select
                     value={formData.tipo_negocio}
-                    onValueChange={value => setFormData({...formData, tipo_negocio: value})}
+                    onValueChange={value => setFormData({...formData, tipo_negocio: value, role: value})}
                   >
                     <SelectTrigger>
                       <SelectValue />
