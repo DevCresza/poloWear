@@ -182,6 +182,84 @@ class FornecedorService extends BaseService {
     super('fornecedores')
   }
 
+  // Criar fornecedor (com criação automática de usuário se tiver email/senha)
+  async create(fornecedorData) {
+    try {
+      let userId = fornecedorData.responsavel_user_id;
+
+      // Se tiver email e senha de fornecedor, criar usuário automaticamente
+      if (fornecedorData.email_fornecedor && fornecedorData.senha_fornecedor) {
+        // 1. Criar usuário no Supabase Auth
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: fornecedorData.email_fornecedor,
+          password: fornecedorData.senha_fornecedor,
+          options: {
+            data: {
+              full_name: fornecedorData.nome_marca,
+              role: 'fornecedor',
+              tipo_negocio: 'fornecedor'
+            }
+          }
+        });
+
+        if (authError) {
+          if (authError.message.includes('User already registered')) {
+            throw new Error(`O email "${fornecedorData.email_fornecedor}" já está registrado no sistema.`);
+          }
+          throw authError;
+        }
+
+        // 2. Criar registro na tabela users
+        const userRecord = {
+          id: authData.user.id,
+          full_name: fornecedorData.nome_marca,
+          email: fornecedorData.email_fornecedor,
+          role: 'fornecedor',
+          tipo_negocio: 'fornecedor',
+          empresa: fornecedorData.razao_social,
+          cnpj: fornecedorData.cnpj,
+          password_hash: 'managed_by_supabase_auth',
+          auth_synced: true,
+          ativo: true,
+          nome_marca: fornecedorData.nome_marca,
+          razao_social: fornecedorData.razao_social
+        };
+
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .insert([userRecord])
+          .select()
+          .single();
+
+        if (userError) throw userError;
+
+        // Usar o ID do usuário criado
+        userId = authData.user.id;
+      }
+
+      // 3. Criar o fornecedor vinculado ao usuário
+      const fornecedorRecord = {
+        ...fornecedorData,
+        responsavel_user_id: userId || null
+      };
+
+      const result = await super.create(fornecedorRecord);
+
+      // 4. Se criou usuário, atualizar com fornecedor_id
+      if (userId && result.success) {
+        await supabase
+          .from('users')
+          .update({ fornecedor_id: result.data.id })
+          .eq('id', userId);
+      }
+
+      return result;
+
+    } catch (error) {
+      return handleSupabaseError(error);
+    }
+  }
+
   // Buscar fornecedores ativos
   async findAtivos() {
     return this.find({
