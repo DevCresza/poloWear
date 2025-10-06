@@ -20,7 +20,8 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
   const [formData, setFormData] = useState({
     nome: '',
     descricao: '',
-    marca: '',
+    marca: 'Polo Wear',
+    referencia: '',
     fornecedor_id: '',
     tipo_venda: 'grade',
     grade_configuracao: {
@@ -64,10 +65,14 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
       setFornecedores(fornecedores);
 
       if (!produto && fornecedores.length > 0) {
+        // Buscar fornecedor Polo Wear como padrão
+        const poloWearFornecedor = fornecedores.find(f => f.nome_marca === 'Polo Wear');
+        const fornecedorPadrao = poloWearFornecedor || fornecedores[0];
+
         setFormData(prev => ({
           ...prev,
-          fornecedor_id: fornecedores[0].id,
-          marca: fornecedores[0].nome_marca
+          fornecedor_id: fornecedorPadrao.id,
+          marca: 'Polo Wear'
         }));
       }
     } catch (error) {
@@ -275,34 +280,33 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
                   required
                 />
               </div>
-              
+
               <div>
-                <Label htmlFor="marca">Marca *</Label>
-                <Select value={formData.marca} onValueChange={(value) => setFormData({...formData, marca: value})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a marca" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {fornecedores.map((fornecedor, index) => {
-                      return (
-                        <SelectItem key={`marca-${fornecedor.id}`} value={fornecedor.nome_marca}>
-                          {fornecedor.nome_marca}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="referencia">Referência</Label>
+                <Input
+                  id="referencia"
+                  value={formData.referencia}
+                  onChange={(e) => setFormData({...formData, referencia: e.target.value})}
+                  placeholder="Código de referência do produto"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="marca">Marca</Label>
+                <Input
+                  id="marca"
+                  value="Polo Wear"
+                  disabled
+                  className="bg-gray-100"
+                />
               </div>
 
               <div>
                 <Label htmlFor="fornecedor">Fornecedor *</Label>
                 <Select value={formData.fornecedor_id} onValueChange={(value) => {
-                  // Ao mudar fornecedor, atualizar também a marca
-                  const fornecedorSelecionado = fornecedores.find(f => f.id === value);
                   setFormData({
                     ...formData,
-                    fornecedor_id: value,
-                    marca: fornecedorSelecionado ? fornecedorSelecionado.nome_marca : ''
+                    fornecedor_id: value
                   });
                 }}>
                   <SelectTrigger>
