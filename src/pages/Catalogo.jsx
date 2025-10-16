@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import ProductImageCarousel from '@/components/ui/product-image-carousel';
 
 export default function Catalogo() {
   usePageTitle('Catálogo', 'Explore nossa coleção de produtos de moda no atacado');
@@ -196,8 +197,8 @@ export default function Catalogo() {
                   {featuredProducts.map(produto => (
                     <Card key={produto.id} className="inline-block w-[250px] bg-slate-100 rounded-2xl shadow-neumorphic">
                       <CardContent className="p-3">
-                        <div className="aspect-[3/4] bg-gray-200 rounded-lg overflow-hidden mb-3">
-                          <img src={produto.fotos?.[0] || 'https://via.placeholder.com/250'} alt={produto.nome} className="w-full h-full object-cover"/>
+                        <div className="mb-3">
+                          <ProductImageCarousel images={produto.fotos} productName={produto.nome} />
                         </div>
                         <h3 className="font-semibold mt-2 truncate">{produto.nome}</h3>
                         <Badge variant="outline" className="text-xs bg-slate-200 mb-2">{produto.marca}</Badge>
@@ -291,18 +292,12 @@ export default function Catalogo() {
           {/* Products Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map(produto => (
-              <Card key={produto.id} className="group bg-slate-100 rounded-2xl shadow-neumorphic hover:-translate-y-1 transition-transform">
+              <Card key={produto.id} className="group bg-slate-100 rounded-2xl shadow-neumorphic hover:-translate-y-1 transition-transform flex flex-col h-full">
                 <div className="p-3">
-                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden relative">
-                    {produto.fotos && produto.fotos[0] ? (
-                      <img src={produto.fotos[0]} alt={produto.nome} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <Package className="w-12 h-12 text-gray-400" />
-                      </div>
-                    )}
+                  <div className="relative">
+                    <ProductImageCarousel images={produto.fotos} productName={produto.nome} />
                     {produto.is_destaque && (
-                      <div className="absolute top-2 right-2">
+                      <div className="absolute top-2 right-2 z-10">
                         <Badge className="bg-yellow-500 text-white">
                           <Star className="w-3 h-3 mr-1" />
                           Destaque
@@ -310,34 +305,38 @@ export default function Catalogo() {
                       </div>
                     )}
                     {produto.controla_estoque && produto.estoque_atual_grades <= 0 && (
-                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg z-10">
                         <Badge className="bg-red-600 text-white">Sem Estoque</Badge>
                       </div>
                     )}
                   </div>
                 </div>
-                <CardContent className="p-4 pt-0">
-                  <div className="space-y-3">
-                    <h3 className="font-semibold text-gray-900 line-clamp-2 h-12">{produto.nome}</h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="text-xs bg-slate-200">{produto.marca}</Badge>
-                        <span className="text-xl font-bold text-blue-600">R$ {getPrice(produto)?.toFixed(2)}</span>
+                <CardContent className="p-4 pt-0 flex-1 flex flex-col">
+                  <div className="flex-1 flex flex-col gap-3">
+                    <h3 className="font-semibold text-base text-gray-900 line-clamp-2 h-12 leading-6">{produto.nome}</h3>
+                    <div className="flex-1 flex flex-col gap-2">
+                      <div className="flex items-center justify-between h-6">
+                        <Badge variant="outline" className="text-xs bg-slate-200 h-5">{produto.marca}</Badge>
+                        <span className="text-lg font-bold text-blue-600">R$ {getPrice(produto)?.toFixed(2)}</span>
                       </div>
-                      <div className="text-xs text-gray-600 space-y-1">
-                        {produto.tipo_venda === 'grade' ? (
-                          <span>Grade completa • {produto.total_pecas_grade} peças</span>
-                        ) : (
-                          <span>Venda unitária</span>
-                        )}
-                        {produto.controla_estoque && (
-                          <div className={`font-medium ${produto.estoque_atual_grades > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            {produto.estoque_atual_grades > 0 ? `${produto.estoque_atual_grades} disponível` : 'Esgotado'}
-                          </div>
-                        )}
+                      <div className="text-xs text-gray-600 h-10 flex flex-col justify-start gap-1">
+                        <div className="h-4 flex items-center">
+                          {produto.tipo_venda === 'grade' ? (
+                            <span>Grade completa • {produto.total_pecas_grade} peças</span>
+                          ) : (
+                            <span>Venda unitária</span>
+                          )}
+                        </div>
+                        <div className="h-4 flex items-center">
+                          {produto.controla_estoque && (
+                            <span className={`font-medium ${produto.estoque_atual_grades > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {produto.estoque_atual_grades > 0 ? `${produto.estoque_atual_grades} disponível` : 'Esgotado'}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 mt-auto">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -382,15 +381,7 @@ export default function Catalogo() {
             <div className="space-y-4">
               <div className="flex gap-6">
                 <div className="w-1/2">
-                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                    {selectedProduct.fotos && selectedProduct.fotos[0] ? (
-                      <img src={selectedProduct.fotos[0]} alt={selectedProduct.nome} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <Package className="w-16 h-16 text-gray-400" />
-                      </div>
-                    )}
-                  </div>
+                  <ProductImageCarousel images={selectedProduct.fotos} productName={selectedProduct.nome} />
                 </div>
                 <div className="w-1/2 space-y-4">
                   <div>

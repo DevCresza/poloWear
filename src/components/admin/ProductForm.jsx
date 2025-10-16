@@ -517,22 +517,34 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
-                  {Array.from({ length: 6 }, (_, index) => (
-                    <ImageUploader
-                      key={index}
-                      imageUrl={formData.fotos?.[index]}
-                      onUploadComplete={(url) => {
-                        const novasFotos = [...(formData.fotos || [])];
-                        novasFotos[index] = url;
-                        setFormData({...formData, fotos: novasFotos});
-                      }}
-                      onRemove={() => {
-                        const novasFotos = [...(formData.fotos || [])];
-                        novasFotos.splice(index, 1);
-                        setFormData({...formData, fotos: novasFotos});
-                      }}
-                    />
-                  ))}
+                  {Array.from({ length: 6 }, (_, index) => {
+                    const labels = [
+                      'Foto Principal (Capa)',
+                      'Segunda Foto',
+                      'Terceira Foto',
+                      'Quarta Foto',
+                      'Quinta Foto',
+                      'Sexta Foto'
+                    ];
+
+                    return (
+                      <ImageUploader
+                        key={index}
+                        label={labels[index]}
+                        imageUrl={formData.fotos?.[index]}
+                        onUploadComplete={(url) => {
+                          const novasFotos = [...(formData.fotos || [])];
+                          novasFotos[index] = url;
+                          setFormData({...formData, fotos: novasFotos});
+                        }}
+                        onRemove={() => {
+                          const novasFotos = [...(formData.fotos || [])];
+                          novasFotos.splice(index, 1);
+                          setFormData({...formData, fotos: novasFotos});
+                        }}
+                      />
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
