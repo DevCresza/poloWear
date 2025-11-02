@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import {
-  Search, ShoppingCart, Eye, Package, Building, Tag, DollarSign, Star, Image as ImageIcon, X
+  Search, ShoppingCart, Eye, Package, Building, Tag, DollarSign, Star, Image as ImageIcon, X, Check, Plus, Minus
 } from 'lucide-react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -33,6 +33,9 @@ export default function Catalogo() {
   const [showProductModal, setShowProductModal] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationMessage, setNotificationMessage] = useState('');
+  const [quantidadeGrades, setQuantidadeGrades] = useState(2);
+  const [selectedCores, setSelectedCores] = useState({});
+  const [coresProcessadas, setCoresProcessadas] = useState([]);
 
   useEffect(() => {
     checkUserAndLoadData();
@@ -117,41 +120,306 @@ export default function Catalogo() {
 
   const handleViewProduct = (produto) => {
     setSelectedProduct(produto);
+    setQuantidadeGrades(2); // Reset para quantidade mínima
+
+    // Processar cores disponíveis (composicao_grade ou cores_disponiveis)
+    const coresDisponiveis = produto.composicao_grade?.cores && produto.composicao_grade.cores.length > 0
+      ? produto.composicao_grade.cores
+      : (produto.cores_disponiveis && produto.cores_disponiveis.length > 0
+          ? produto.cores_disponiveis.map(cor => ({
+              nome: cor,
+              hexCode: getDefaultColorForName(cor),
+              quantidade: Math.floor(produto.estoque_atual_grades / (produto.cores_disponiveis?.length || 1)) || 5
+            }))
+          : []);
+
+    setCoresProcessadas(coresDisponiveis);
+
+    if (coresDisponiveis.length > 0) {
+      const initialCores = {};
+      coresDisponiveis.forEach((cor, index) => {
+        initialCores[index] = 0;
+      });
+      setSelectedCores(initialCores);
+    } else {
+      setSelectedCores({});
+    }
+
     setShowProductModal(true);
+  };
+
+  // Função auxiliar para gerar cor padrão baseada no nome
+  const getDefaultColorForName = (corNome) => {
+    const coresMap = {
+      // Pretos e Escuros
+      'PRETO': '#000000',
+      'POLO PRETO': '#000000',
+      'PRETO FOSCO': '#1a1a1a',
+
+      // Brancos
+      'BRANCO': '#FFFFFF',
+      'BRANCO GELO': '#FFFAFA',
+      'OFF WHITE': '#F8F8F8',
+      'CREME': '#FFFDD0',
+
+      // Azuis
+      'AZUL': '#0066CC',
+      'AZUL ESCURO': '#003366',
+      'AZUL MARINHO': '#000080',
+      'AZUL CLARO': '#87CEEB',
+      'AZUL MÉDIO': '#4682B4',
+      'AZUL MEDIO': '#4682B4',
+      'AZUL ROYAL': '#4169E1',
+      'SOL AZUL': '#4682B4',
+      'MARINHO': '#000080',
+      'JEANS': '#1560BD',
+      'JEANS CLARO': '#5B9BD5',
+      'JEANS MÉDIO': '#1560BD',
+      'JEANS MEDIO': '#1560BD',
+      'JEANS ESCURO': '#0F4C81',
+
+      // Verdes
+      'VERDE': '#00AA00',
+      'VERDE MILITAR': '#4B5320',
+      'VERDE ESCURO': '#006400',
+      'VERDE CLARO': '#90EE90',
+      'VERDE MÉDIO': '#228B22',
+      'VERDE MEDIO': '#228B22',
+      'SOL VERDE': '#9ACD32',
+
+      // Vermelhos e Rosas
+      'VERMELHO': '#CC0000',
+      'VERMELHO ESCURO': '#8B0000',
+      'VERMELHO MÉDIO': '#DC143C',
+      'VERMELHO MEDIO': '#DC143C',
+      'ROSA': '#FFB6C1',
+      'ROSA CLARO': '#FFB6C1',
+      'ROSA MÉDIO': '#FF69B4',
+      'ROSA MEDIO': '#FF69B4',
+      'ROSA ESCURO': '#FF1493',
+      'SOL ROSA': '#FFB6C1',
+      'ABESTATO ROSA': '#E6B0AA',
+
+      // Roxos
+      'ROXO': '#800080',
+      'ROXO CLARO': '#9370DB',
+      'ROXO MÉDIO': '#8B008B',
+      'ROXO MEDIO': '#8B008B',
+      'ROXO ESCURO': '#4B0082',
+      'LILÁS': '#C8A2C8',
+      'LILAS': '#C8A2C8',
+      'UVA': '#6A0DAD',
+
+      // Laranjas e Amarelos
+      'LARANJA': '#FF8800',
+      'LARANJA CLARO': '#FFA500',
+      'LARANJA MÉDIO': '#FF8C00',
+      'LARANJA MEDIO': '#FF8C00',
+      'LARANJA ESCURO': '#FF6600',
+      'AMARELO': '#FFCC00',
+      'AMARELO CLARO': '#FFFF99',
+      'AMARELO MÉDIO': '#FFD700',
+      'AMARELO MEDIO': '#FFD700',
+      'AMARELO ESCURO': '#CCAA00',
+      'MOSTARDA': '#FFDB58',
+
+      // Marrons e Tons Terra
+      'MARROM': '#8B4513',
+      'MARROM CLARO': '#D2691E',
+      'MARROM MÉDIO': '#A0522D',
+      'MARROM MEDIO': '#A0522D',
+      'MARROM ESCURO': '#654321',
+      'CARAMELO': '#C68E17',
+      'BEGE': '#F5F5DC',
+      'BEGE CLARO': '#FAF0E6',
+      'BEGE MÉDIO': '#D2B48C',
+      'BEGE MEDIO': '#D2B48C',
+      'BEGE ESCURO': '#C19A6B',
+      'CÁQUI': '#C3B091',
+      'CAQUI': '#C3B091',
+      'NUDE': '#E3BC9A',
+      'AREIA': '#C2B280',
+
+      // Vinhos
+      'VINHO': '#722F37',
+      'VINHO CLARO': '#8B475D',
+      'VINHO MÉDIO': '#722F37',
+      'VINHO MEDIO': '#722F37',
+      'VINHO ESCURO': '#5E1914',
+      'BORDÔ': '#800020',
+      'BORDO': '#800020',
+
+      // Cinzas e Mesclas
+      'CINZA': '#808080',
+      'CINZA CLARO': '#D3D3D3',
+      'CINZA MÉDIO': '#A9A9A9',
+      'CINZA MEDIO': '#A9A9A9',
+      'CINZA ESCURO': '#4A4A4A',
+      'GRAFITE': '#383838',
+      'MESCLA': '#999999',
+      'MESCLA CLARO': '#CCCCCC',
+      'MESCLA MÉDIO': '#999999',
+      'MESCLA MEDIO': '#999999',
+      'MESCLA ESCURO': '#666666',
+
+      // Outros
+      'CORAL': '#FF7F50',
+      'SALMÃO': '#FA8072',
+      'SALMAO': '#FA8072',
+      'TURQUESA': '#40E0D0',
+      'MENTA': '#98FF98',
+      'PÊSSEGO': '#FFE5B4',
+      'PESSEGO': '#FFE5B4',
+      'TERRACOTA': '#E2725B',
+      'COBRE': '#B87333',
+      'BRONZE': '#CD7F32',
+      'DOURADO': '#FFD700',
+      'PRATEADO': '#C0C0C0',
+      'PETRÓLEO': '#2C5F6F',
+      'PETROLEO': '#2C5F6F',
+      'FERRUGEM': '#B7410E'
+    };
+
+    // Normalizar o nome da cor (maiúsculo e sem espaços extras)
+    const corNormalizada = corNome.toUpperCase().trim();
+
+    // Retornar a cor do mapa ou cinza como fallback
+    return coresMap[corNormalizada] || '#808080';
+  };
+
+  const handleCorQuantidadeChange = (corIndex, quantidade) => {
+    if (!coresProcessadas || coresProcessadas.length === 0) return;
+
+    const cor = coresProcessadas[corIndex];
+    const maxQuantidade = cor.quantidade || 0;
+    const novaQuantidade = Math.max(0, Math.min(parseInt(quantidade) || 0, maxQuantidade));
+
+    setSelectedCores(prev => ({
+      ...prev,
+      [corIndex]: novaQuantidade
+    }));
+  };
+
+  const getTotalGradesSelecionadas = () => {
+    return Object.values(selectedCores).reduce((sum, qty) => sum + (qty || 0), 0);
+  };
+
+  const incrementGrades = () => {
+    if (selectedProduct && selectedProduct.controla_estoque) {
+      // Verificar se não excede o estoque disponível
+      if (quantidadeGrades < selectedProduct.estoque_atual_grades) {
+        setQuantidadeGrades(prev => prev + 1);
+      }
+    } else {
+      setQuantidadeGrades(prev => prev + 1);
+    }
+  };
+
+  const decrementGrades = () => {
+    if (quantidadeGrades > 2) { // Mínimo de 2 grades
+      setQuantidadeGrades(prev => prev - 1);
+    }
+  };
+
+  const handleQuantidadeChange = (e) => {
+    const value = parseInt(e.target.value) || 2;
+    const minimo = 2;
+
+    if (value < minimo) {
+      setQuantidadeGrades(minimo);
+    } else if (selectedProduct && selectedProduct.controla_estoque) {
+      // Verificar se não excede o estoque disponível
+      if (value <= selectedProduct.estoque_atual_grades) {
+        setQuantidadeGrades(value);
+      } else {
+        setQuantidadeGrades(selectedProduct.estoque_atual_grades);
+      }
+    } else {
+      setQuantidadeGrades(value);
+    }
+  };
+
+  const calcularTotal = () => {
+    if (!selectedProduct) return { totalPecas: 0, totalValor: 0 };
+
+    const precoPorGrade = selectedProduct.preco_grade_completa || 0;
+    const pecasPorGrade = selectedProduct.total_pecas_grade || 12;
+
+    // Se há cores selecionadas, usar o total de grades selecionadas
+    const totalGrades = coresProcessadas && coresProcessadas.length > 0 && Object.keys(selectedCores).length > 0
+      ? getTotalGradesSelecionadas()
+      : quantidadeGrades;
+
+    return {
+      totalPecas: totalGrades * pecasPorGrade,
+      totalValor: totalGrades * precoPorGrade
+    };
   };
 
   const handleAddToCart = (produto) => {
     try {
-
       // Carregar carrinho existente do localStorage
       const carrinhoSalvo = localStorage.getItem('carrinho');
       const carrinho = carrinhoSalvo ? JSON.parse(carrinhoSalvo) : [];
 
+      // Preparar o item para adicionar ao carrinho
+      const itemCarrinho = {
+        ...produto,
+        quantidade: 1
+      };
 
-      // Verificar se produto já existe no carrinho
-      const itemExistente = carrinho.find(item => item.id === produto.id);
+      // Se o produto tem composição de cores e há seleções
+      if (coresProcessadas && coresProcessadas.length > 0 && getTotalGradesSelecionadas() > 0) {
+        // Adicionar informações de cores selecionadas
+        itemCarrinho.coresSelecionadas = coresProcessadas
+          .map((cor, index) => ({
+            nome: cor.nome,
+            hexCode: cor.hexCode,
+            quantidade: selectedCores[index] || 0
+          }))
+          .filter(cor => cor.quantidade > 0);
+
+        itemCarrinho.quantidadeTotalGrades = getTotalGradesSelecionadas();
+      } else {
+        // Usar quantidade padrão
+        itemCarrinho.quantidadeTotalGrades = quantidadeGrades;
+      }
+
+      // Verificar se produto similar já existe no carrinho (mesmo produto + mesmas cores)
+      const itemExistente = carrinho.find(item => {
+        if (item.id !== produto.id) return false;
+
+        // Se não tem cores, é o mesmo produto
+        if (!item.coresSelecionadas && !itemCarrinho.coresSelecionadas) return true;
+
+        // Se um tem cores e outro não, são diferentes
+        if (!item.coresSelecionadas || !itemCarrinho.coresSelecionadas) return false;
+
+        // Comparar cores selecionadas
+        return JSON.stringify(item.coresSelecionadas) === JSON.stringify(itemCarrinho.coresSelecionadas);
+      });
 
       let novoCarrinho;
       if (itemExistente) {
         // Atualizar quantidade se já existe
         novoCarrinho = carrinho.map(item =>
-          item.id === produto.id
+          item === itemExistente
             ? { ...item, quantidade: item.quantidade + 1 }
             : item
         );
       } else {
         // Adicionar novo produto ao carrinho
-        novoCarrinho = [...carrinho, { ...produto, quantidade: 1 }];
+        novoCarrinho = [...carrinho, itemCarrinho];
       }
 
       // Salvar no localStorage
       localStorage.setItem('carrinho', JSON.stringify(novoCarrinho));
 
-      // Verificar se foi salvo corretamente
-      const verificacao = localStorage.getItem('carrinho');
-
       // Mostrar notificação de sucesso
-      showSuccessNotification(`Produto "${produto.nome}" adicionado ao carrinho!`);
+      const totalGrades = itemCarrinho.quantidadeTotalGrades || 1;
+      showSuccessNotification(
+        `Produto "${produto.nome}" adicionado ao carrinho! (${totalGrades} ${totalGrades === 1 ? 'grade' : 'grades'})`
+      );
 
     } catch (error) {
       showSuccessNotification('Erro ao adicionar produto ao carrinho. Tente novamente.');
@@ -373,60 +641,257 @@ export default function Catalogo() {
 
       {/* Modal de Detalhes do Produto */}
       <Dialog open={showProductModal} onOpenChange={setShowProductModal}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Detalhes do Produto</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedProduct && (
-            <div className="space-y-4">
-              <div className="flex gap-6">
-                <div className="w-1/2">
+            <div className="space-y-6">
+              {/* Título e Close Button */}
+              <div className="flex items-start justify-between">
+                <h2 className="text-2xl font-bold text-gray-900 pr-8">{selectedProduct.nome}</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Coluna Esquerda - Imagens */}
+                <div className="space-y-4">
                   <ProductImageCarousel images={selectedProduct.fotos} productName={selectedProduct.nome} />
                 </div>
-                <div className="w-1/2 space-y-4">
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">{selectedProduct.nome}</h3>
-                    <Badge variant="outline" className="mt-2">{selectedProduct.marca}</Badge>
-                  </div>
 
-                  <div className="space-y-2">
-                    <p className="text-3xl font-bold text-blue-600">R$ {getPrice(selectedProduct)?.toFixed(2)}</p>
-                    <p className="text-sm text-gray-600">
-                      {selectedProduct.tipo_venda === 'grade' ?
-                        `Grade completa • ${selectedProduct.total_pecas_grade} peças` :
-                        'Venda unitária'
-                      }
-                    </p>
-                    {selectedProduct.controla_estoque && (
-                      <p className={`font-medium ${selectedProduct.estoque_atual_grades > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {selectedProduct.estoque_atual_grades > 0 ?
-                          `${selectedProduct.estoque_atual_grades} disponível` :
-                          'Esgotado'
-                        }
-                      </p>
+                {/* Coluna Direita - Informações */}
+                <div className="space-y-6">
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline" className="text-sm bg-blue-50 text-blue-600 border-blue-200">
+                      {selectedProduct.marca || 'Polo Wear'}
+                    </Badge>
+                    <Badge variant="outline" className="text-sm bg-slate-100 text-gray-700">
+                      Camisas
+                    </Badge>
+                    {selectedProduct.is_destaque && (
+                      <Badge className="text-sm bg-yellow-500 text-white border-0">
+                        <Star className="w-3 h-3 mr-1" />
+                        Destaque
+                      </Badge>
                     )}
                   </div>
 
+                  {/* Descrição */}
                   {selectedProduct.descricao && (
+                    <p className="text-gray-700 text-sm leading-relaxed">
+                      {selectedProduct.descricao}
+                    </p>
+                  )}
+
+                  {/* Preços */}
+                  <div className="bg-blue-50 rounded-xl p-4 space-y-3">
                     <div>
-                      <h4 className="font-semibold text-gray-900 mb-2">Descrição</h4>
-                      <p className="text-gray-600">{selectedProduct.descricao}</p>
+                      <p className="text-sm text-gray-600 mb-1">Preço por Peça</p>
+                      <p className="text-3xl font-bold text-blue-600">
+                        R$ {(selectedProduct.preco_unitario ||
+                            (selectedProduct.preco_grade_completa && selectedProduct.total_pecas_grade
+                              ? selectedProduct.preco_grade_completa / selectedProduct.total_pecas_grade
+                              : 0)
+                        ).toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-blue-100">
+                      <span className="text-sm text-gray-700">
+                        Grade completa ({selectedProduct.total_pecas_grade || 12} peças):
+                      </span>
+                      <span className="text-xl font-bold text-blue-600">
+                        R$ {selectedProduct.preco_grade_completa?.toFixed(2) || '0.00'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Tamanhos da Grade */}
+                  {selectedProduct.grade_configuracao?.tamanhos_disponiveis &&
+                   selectedProduct.grade_configuracao.tamanhos_disponiveis.length > 0 && (
+                    <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                      <p className="text-sm font-semibold text-gray-900 mb-2">Composição da Grade:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedProduct.grade_configuracao.tamanhos_disponiveis.map((tamanho, idx) => (
+                          <div key={idx} className="bg-white px-3 py-1.5 rounded border border-gray-300">
+                            <span className="text-sm font-medium text-gray-900">{tamanho}</span>
+                            {selectedProduct.grade_configuracao.quantidades_por_tamanho[tamanho] && (
+                              <span className="text-xs text-gray-600 ml-1">
+                                ({selectedProduct.grade_configuracao.quantidades_por_tamanho[tamanho]} pç)
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
+                  {/* Composição da Grade */}
+                  {coresProcessadas && coresProcessadas.length > 0 ? (
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3">Selecione as Cores e Quantidades:</h4>
+                      <div className="space-y-2">
+                        {coresProcessadas.map((cor, index) => (
+                          <div key={index} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200 hover:border-blue-300 transition-colors">
+                              <div
+                                className="w-10 h-10 rounded-md border-2 border-gray-300 flex-shrink-0"
+                                style={{ backgroundColor: cor.hexCode }}
+                                title={cor.hexCode}
+                              />
+                              <div className="flex-1">
+                                <p className="font-medium text-sm text-gray-900">{cor.nome}</p>
+                                <p className="text-xs text-gray-500">
+                                  Disponível: {cor.quantidade} {cor.quantidade === 1 ? 'grade' : 'grades'}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8 rounded-lg"
+                                  onClick={() => handleCorQuantidadeChange(index, (selectedCores[index] || 0) - 1)}
+                                  disabled={(selectedCores[index] || 0) <= 0}
+                                >
+                                  <Minus className="h-4 w-4" />
+                                </Button>
+                                <Input
+                                  type="number"
+                                  value={selectedCores[index] || 0}
+                                  onChange={(e) => handleCorQuantidadeChange(index, e.target.value)}
+                                  className="w-16 h-8 text-center"
+                                  min="0"
+                                  max={cor.quantidade}
+                                />
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8 rounded-lg"
+                                  onClick={() => handleCorQuantidadeChange(index, (selectedCores[index] || 0) + 1)}
+                                  disabled={(selectedCores[index] || 0) >= cor.quantidade}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </Button>
+                              </div>
+                              {selectedCores[index] > 0 && (
+                                <div className="text-right min-w-[80px]">
+                                  <p className="text-sm font-semibold text-blue-600">
+                                    {selectedCores[index]} {selectedCores[index] === 1 ? 'grade' : 'grades'}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {selectedCores[index] * (selectedProduct.total_pecas_grade || 12)} peças
+                                  </p>
+                                </div>
+                              )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Resumo das grades selecionadas */}
+                      {getTotalGradesSelecionadas() > 0 && (
+                        <div className="bg-blue-50 p-3 rounded-lg mt-3 border border-blue-200">
+                          <p className="text-sm font-semibold text-blue-800">
+                            Total selecionado: {getTotalGradesSelecionadas()} {getTotalGradesSelecionadas() === 1 ? 'grade' : 'grades'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-2">Composição da Grade:</h4>
+                      <div className="bg-slate-50 rounded-lg p-4 flex items-center justify-center">
+                        <p className="text-sm text-gray-500 italic">
+                          Composição por cor não configurada
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Estoque Disponível */}
+                  {selectedProduct.controla_estoque && (
+                    <div className="flex items-center gap-2 text-green-600">
+                      <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                        <Check className="w-3 h-3 text-green-600" />
+                      </div>
+                      <span className="font-medium">
+                        {selectedProduct.estoque_atual_grades || 0} grades disponíveis
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Quantidade de Grades - só mostra se NÃO tiver composição de cores */}
+                  {(!coresProcessadas || coresProcessadas.length === 0) && (
+                    <div className="space-y-2">
+                      <label className="font-semibold text-gray-900">Quantidade de Grades:</label>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 rounded-lg"
+                          onClick={decrementGrades}
+                          disabled={quantidadeGrades <= 2}
+                        >
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <Input
+                          type="number"
+                          value={quantidadeGrades}
+                          onChange={handleQuantidadeChange}
+                          className="w-20 h-10 text-center"
+                          min="2"
+                          max={selectedProduct.controla_estoque ? selectedProduct.estoque_atual_grades : undefined}
+                        />
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 rounded-lg"
+                          onClick={incrementGrades}
+                          disabled={
+                            selectedProduct.controla_estoque &&
+                            quantidadeGrades >= selectedProduct.estoque_atual_grades
+                          }
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                        <span className="text-sm text-gray-600 ml-2">Mínimo: 2</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Total */}
+                  <div className="bg-slate-100 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-semibold text-gray-900">Total:</span>
+                      <span className="text-3xl font-bold text-blue-600">
+                        R$ {calcularTotal().totalValor.toFixed(2)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 text-right">
+                      {calcularTotal().totalPecas} peças no total
+                    </p>
+                  </div>
+
+                  {/* Botão Adicionar ao Carrinho */}
                   <Button
-                    className="w-full bg-blue-600 text-white"
-                    disabled={selectedProduct.controla_estoque && !selectedProduct.permite_venda_sem_estoque && selectedProduct.estoque_atual_grades <= 0}
+                    className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white text-base font-semibold rounded-xl disabled:bg-gray-400"
+                    disabled={
+                      (selectedProduct.controla_estoque &&
+                        !selectedProduct.permite_venda_sem_estoque &&
+                        selectedProduct.estoque_atual_grades <= 0) ||
+                      (coresProcessadas &&
+                        coresProcessadas.length > 0 &&
+                        getTotalGradesSelecionadas() === 0)
+                    }
                     onClick={() => {
                       handleAddToCart(selectedProduct);
                       setShowProductModal(false);
                     }}
                   >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    {selectedProduct.controla_estoque && !selectedProduct.permite_venda_sem_estoque && selectedProduct.estoque_atual_grades <= 0 ?
-                      'Produto Esgotado' :
-                      'Adicionar ao Carrinho'
-                    }
+                    <ShoppingCart className="w-5 h-5 mr-2" />
+                    {selectedProduct.controla_estoque &&
+                    !selectedProduct.permite_venda_sem_estoque &&
+                    selectedProduct.estoque_atual_grades <= 0
+                      ? 'Produto Esgotado'
+                      : coresProcessadas &&
+                        coresProcessadas.length > 0 &&
+                        getTotalGradesSelecionadas() === 0
+                      ? 'Selecione as Cores'
+                      : 'Adicionar ao Carrinho'}
                   </Button>
                 </div>
               </div>

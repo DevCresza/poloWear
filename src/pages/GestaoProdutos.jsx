@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Package, Edit, Star, Search, AlertTriangle, Eye } from 'lucide-react';
+import { Plus, Package, Edit, Star, Search, AlertTriangle, Eye, Trash2 } from 'lucide-react';
 import ProductForm from '../components/admin/ProductForm';
 import { Switch } from '@/components/ui/switch';
 import { useNotification } from '@/hooks/useNotification';
@@ -24,6 +24,7 @@ export default function GestaoProdutos() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterFornecedor, setFilterFornecedor] = useState('all');
   const [filterCategoria, setFilterCategoria] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
   const notification = useNotification();
 
   const categorias = [
@@ -113,6 +114,28 @@ export default function GestaoProdutos() {
     }
   };
 
+  const handleDelete = async (produto) => {
+    // Confirmação antes de excluir
+    const confirmacao = window.confirm(
+      `Tem certeza que deseja excluir o produto "${produto.nome}"?\n\nEsta ação não pode ser desfeita.`
+    );
+
+    if (!confirmacao) return;
+
+    try {
+      const result = await Produto.delete(produto.id);
+
+      if (result.success) {
+        notification.showSuccess(`Produto "${produto.nome}" excluído com sucesso!`);
+        loadData(); // Recarregar a lista de produtos
+      } else {
+        notification.showError(result.error || "Falha ao excluir o produto.");
+      }
+    } catch (error) {
+      notification.showError("Erro ao excluir o produto. Tente novamente.");
+    }
+  };
+
   const getFornecedorNome = (fornecedorId) => {
     const fornecedor = fornecedores.find(f => f.id === fornecedorId);
     return fornecedor ? fornecedor.nome_marca : 'N/A';
@@ -138,8 +161,11 @@ export default function GestaoProdutos() {
                          produto.marca?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFornecedor = filterFornecedor === 'all' || produto.fornecedor_id === filterFornecedor;
     const matchesCategoria = filterCategoria === 'all' || produto.categoria === filterCategoria;
-    
-    return matchesSearch && matchesFornecedor && matchesCategoria;
+    const matchesStatus = filterStatus === 'all' ||
+                         (filterStatus === 'ativo' && produto.ativo) ||
+                         (filterStatus === 'inativo' && !produto.ativo);
+
+    return matchesSearch && matchesFornecedor && matchesCategoria && matchesStatus;
   });
 
   if (loading) {
@@ -192,7 +218,7 @@ export default function GestaoProdutos() {
                     className="pl-10"
                   />
                 </div>
-                
+
                 <Select value={filterFornecedor} onValueChange={setFilterFornecedor}>
                   <SelectTrigger className="w-48">
                     <SelectValue placeholder="Todos fornecedores" />
@@ -218,6 +244,17 @@ export default function GestaoProdutos() {
                         {categoria}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Todos os status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os status</SelectItem>
+                    <SelectItem value="ativo">Somente ativos</SelectItem>
+                    <SelectItem value="inativo">Somente inativos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -342,13 +379,22 @@ export default function GestaoProdutos() {
                           
                           <TableCell>
                             <div className="flex gap-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 onClick={() => handleEdit(produto)}
                               >
                                 <Edit className="w-4 h-4 mr-1" />
                                 Editar
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                                onClick={() => handleDelete(produto)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Excluir
                               </Button>
                             </div>
                           </TableCell>
@@ -364,8 +410,8 @@ export default function GestaoProdutos() {
                   <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum produto encontrado</h3>
                   <p className="text-gray-600">
-                    {searchTerm || filterFornecedor !== 'all' || filterCategoria !== 'all' 
-                      ? 'Tente ajustar os filtros de busca.' 
+                    {searchTerm || filterFornecedor !== 'all' || filterCategoria !== 'all' || filterStatus !== 'all'
+                      ? 'Tente ajustar os filtros de busca.'
                       : 'Cadastre o primeiro produto do sistema.'
                     }
                   </p>

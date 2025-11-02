@@ -29,6 +29,7 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
       quantidades_por_tamanho: {}
     },
     preco_por_peca: 0,
+    preco_unitario: 0,
     total_pecas_grade: 0,
     preco_grade_completa: 0,
     margem_lucro: 0,
@@ -38,6 +39,7 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
     estoque_minimo_grades: 5,
     fotos: [],
     cores_disponiveis: [],
+    composicao_grade: { cores: [] },
     categoria: '',
     temporada: 'Atemporal',
     is_destaque: false,
@@ -49,6 +51,7 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
   const [fornecedores, setFornecedores] = useState([]);
   const [loading, setLoading] = useState(false);
   const [novaCor, setNovaCor] = useState('');
+  const [novaCorComposicao, setNovaCorComposicao] = useState({ nome: '', hexCode: '#000000', quantidade: 1 });
 
   const tamanhosPadrao = ['PP', 'P', 'M', 'G', 'GG', 'XG', '2G', '3G', 'EG'];
   
@@ -90,6 +93,7 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
           quantidades_por_tamanho: {}
         },
         cores_disponiveis: produto.cores_disponiveis || [],
+        composicao_grade: produto.composicao_grade || { cores: [] },
         fotos: produto.fotos || []
       });
     }
@@ -149,11 +153,12 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
   const calcularTotais = (quantidades) => {
     const totalPecas = Object.values(quantidades).reduce((sum, qty) => sum + (qty || 0), 0);
     const precoGrade = totalPecas * (formData.preco_por_peca || 0);
-    
+
     setFormData(prev => ({
       ...prev,
       total_pecas_grade: totalPecas,
-      preco_grade_completa: precoGrade
+      preco_grade_completa: precoGrade,
+      preco_unitario: prev.preco_por_peca // preco_unitario é o mesmo que preco_por_peca
     }));
   };
 
@@ -162,7 +167,8 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
       const precoSugerido = formData.custo_por_peca * (1 + formData.margem_lucro / 100);
       setFormData(prev => ({
         ...prev,
-        preco_por_peca: parseFloat(precoSugerido.toFixed(2))
+        preco_por_peca: parseFloat(precoSugerido.toFixed(2)),
+        preco_unitario: parseFloat(precoSugerido.toFixed(2))
       }));
       calcularTotais(formData.grade_configuracao.quantidades_por_tamanho);
     }
@@ -182,6 +188,57 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
     setFormData(prev => ({
       ...prev,
       cores_disponiveis: prev.cores_disponiveis.filter(c => c !== cor)
+    }));
+  };
+
+  const adicionarCorComposicao = () => {
+    if (novaCorComposicao.nome && novaCorComposicao.quantidade > 0) {
+      const novasCores = [...(formData.composicao_grade?.cores || []), {
+        nome: novaCorComposicao.nome,
+        hexCode: novaCorComposicao.hexCode,
+        quantidade: parseInt(novaCorComposicao.quantidade) || 1
+      }];
+
+      // Calcular estoque total automaticamente
+      const estoqueTotal = novasCores.reduce((sum, cor) => sum + (cor.quantidade || 0), 0);
+
+      setFormData(prev => ({
+        ...prev,
+        composicao_grade: { cores: novasCores },
+        estoque_atual_grades: estoqueTotal
+      }));
+
+      setNovaCorComposicao({ nome: '', hexCode: '#000000', quantidade: 1 });
+    }
+  };
+
+  const removerCorComposicao = (index) => {
+    const novasCores = (formData.composicao_grade?.cores || []).filter((_, i) => i !== index);
+
+    // Recalcular estoque total
+    const estoqueTotal = novasCores.reduce((sum, cor) => sum + (cor.quantidade || 0), 0);
+
+    setFormData(prev => ({
+      ...prev,
+      composicao_grade: { cores: novasCores },
+      estoque_atual_grades: estoqueTotal
+    }));
+  };
+
+  const atualizarQuantidadeCorComposicao = (index, quantidade) => {
+    const novasCores = [...(formData.composicao_grade?.cores || [])];
+    novasCores[index] = {
+      ...novasCores[index],
+      quantidade: Math.max(1, parseInt(quantidade) || 1)
+    };
+
+    // Recalcular estoque total
+    const estoqueTotal = novasCores.reduce((sum, cor) => sum + (cor.quantidade || 0), 0);
+
+    setFormData(prev => ({
+      ...prev,
+      composicao_grade: { cores: novasCores },
+      estoque_atual_grades: estoqueTotal
     }));
   };
 
@@ -282,12 +339,12 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
               </div>
 
               <div>
-                <Label htmlFor="referencia">Referência</Label>
+                <Label htmlFor="referencia">Referência Fornecedor</Label>
                 <Input
                   id="referencia"
                   value={formData.referencia}
                   onChange={(e) => setFormData({...formData, referencia: e.target.value})}
-                  placeholder="Código de referência do produto"
+                  placeholder="Código de referência do fornecedor"
                 />
               </div>
 
@@ -453,7 +510,7 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
                       value={formData.preco_por_peca}
                       onChange={(e) => {
                         const novoPreco = parseFloat(e.target.value) || 0;
-                        setFormData({...formData, preco_por_peca: novoPreco});
+                        setFormData({...formData, preco_por_peca: novoPreco, preco_unitario: novoPreco});
                         calcularTotais(formData.grade_configuracao.quantidades_por_tamanho);
                       }}
                       required
@@ -509,6 +566,149 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Composição da Grade por Cor + Estoque */}
+            {formData.tipo_venda === 'grade' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Estoque por Cor</CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Configure o estoque de grades disponíveis para cada cor. O estoque total será calculado automaticamente.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Formulário para adicionar cor */}
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <div className="md:col-span-2">
+                      <Label htmlFor="nome_cor_composicao">Nome da Cor *</Label>
+                      <Input
+                        id="nome_cor_composicao"
+                        placeholder="Ex: Azul Marinho"
+                        value={novaCorComposicao.nome}
+                        onChange={(e) => setNovaCorComposicao(prev => ({...prev, nome: e.target.value}))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="cor_composicao_hex">Cor Visual</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="cor_composicao_hex"
+                          type="color"
+                          value={novaCorComposicao.hexCode}
+                          onChange={(e) => setNovaCorComposicao(prev => ({...prev, hexCode: e.target.value}))}
+                          className="h-10 w-16 p-1 cursor-pointer"
+                        />
+                        <Input
+                          type="text"
+                          value={novaCorComposicao.hexCode}
+                          onChange={(e) => setNovaCorComposicao(prev => ({...prev, hexCode: e.target.value}))}
+                          placeholder="#000000"
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="estoque_cor">Estoque (grades) *</Label>
+                      <Input
+                        id="estoque_cor"
+                        type="number"
+                        min="1"
+                        value={novaCorComposicao.quantidade}
+                        onChange={(e) => setNovaCorComposicao(prev => ({...prev, quantidade: parseInt(e.target.value) || 1}))}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button type="button" onClick={adicionarCorComposicao} className="w-full">
+                        <Plus className="w-4 h-4 mr-1" />
+                        Adicionar
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Lista de cores adicionadas */}
+                  {formData.composicao_grade?.cores && formData.composicao_grade.cores.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Estoque por Cor</Label>
+                      <div className="space-y-2">
+                        {formData.composicao_grade.cores.map((cor, index) => (
+                          <div key={index} className="flex items-center gap-3 p-3 border rounded-lg bg-white">
+                            <div
+                              className="w-10 h-10 rounded-md border-2 border-gray-300 flex-shrink-0"
+                              style={{ backgroundColor: cor.hexCode }}
+                              title={cor.hexCode}
+                            />
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{cor.nome}</p>
+                              <p className="text-xs text-gray-500">{cor.hexCode}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Label className="text-xs text-gray-600">Estoque:</Label>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => atualizarQuantidadeCorComposicao(index, cor.quantidade - 1)}
+                                disabled={cor.quantidade <= 1}
+                              >
+                                <Minus className="h-3 w-3" />
+                              </Button>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={cor.quantidade}
+                                onChange={(e) => atualizarQuantidadeCorComposicao(index, e.target.value)}
+                                className="w-20 h-8 text-center text-sm font-semibold"
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => atualizarQuantidadeCorComposicao(index, cor.quantidade + 1)}
+                              >
+                                <Plus className="h-3 w-3" />
+                              </Button>
+                              <span className="text-sm font-medium text-gray-700 min-w-[60px]">
+                                {cor.quantidade} {cor.quantidade === 1 ? 'grade' : 'grades'}
+                              </span>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removerCorComposicao(index)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                              title="Remover cor"
+                            >
+                              <Minus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Total de estoque */}
+                      <div className="bg-green-50 border border-green-200 p-4 rounded-lg mt-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-green-800">
+                              Estoque Total
+                            </p>
+                            <p className="text-xs text-green-600 mt-0.5">
+                              Calculado automaticamente pela soma das cores
+                            </p>
+                          </div>
+                          <p className="text-2xl font-bold text-green-800">
+                            {formData.composicao_grade.cores.reduce((sum, cor) => sum + (cor.quantidade || 0), 0)} grades
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Fotos */}
             <Card>
