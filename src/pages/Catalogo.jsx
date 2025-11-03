@@ -562,7 +562,10 @@ export default function Catalogo() {
             {filteredProducts.map(produto => (
               <Card key={produto.id} className="group bg-slate-100 rounded-2xl shadow-neumorphic hover:-translate-y-1 transition-transform flex flex-col h-full">
                 <div className="p-3">
-                  <div className="relative">
+                  <div
+                    className="relative cursor-pointer"
+                    onClick={() => handleViewProduct(produto)}
+                  >
                     <ProductImageCarousel images={produto.fotos} productName={produto.nome} />
                     {produto.is_destaque && (
                       <div className="absolute top-2 right-2 z-10">
@@ -581,7 +584,12 @@ export default function Catalogo() {
                 </div>
                 <CardContent className="p-4 pt-0 flex-1 flex flex-col">
                   <div className="flex-1 flex flex-col gap-3">
-                    <h3 className="font-semibold text-base text-gray-900 line-clamp-2 h-12 leading-6">{produto.nome}</h3>
+                    <h3
+                      className="font-semibold text-base text-gray-900 line-clamp-2 h-12 leading-6 cursor-pointer hover:text-blue-600 transition-colors"
+                      onClick={() => handleViewProduct(produto)}
+                    >
+                      {produto.nome}
+                    </h3>
                     <div className="flex-1 flex flex-col gap-2">
                       <div className="flex items-center justify-between h-6">
                         <Badge variant="outline" className="text-xs bg-slate-200 h-5">{produto.marca}</Badge>
