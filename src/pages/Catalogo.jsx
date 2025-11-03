@@ -96,7 +96,7 @@ export default function Catalogo() {
   const activeCapsulas = capsulas.filter(c => c.ativa);
 
   const getPrice = (produto) => {
-    return produto.tipo_venda === 'grade' ? produto.preco_grade_completa : produto.preco_unitario;
+    return produto.tipo_venda === 'grade' ? produto.preco_grade_completa : produto.preco_por_peca;
   };
   
   const handleSelectCapsula = (capsula) => {
@@ -685,7 +685,7 @@ export default function Catalogo() {
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Preço por Peça</p>
                       <p className="text-3xl font-bold text-blue-600">
-                        R$ {(selectedProduct.preco_unitario ||
+                        R$ {(selectedProduct.preco_por_peca ||
                             (selectedProduct.preco_grade_completa && selectedProduct.total_pecas_grade
                               ? selectedProduct.preco_grade_completa / selectedProduct.total_pecas_grade
                               : 0)

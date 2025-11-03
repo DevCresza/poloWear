@@ -114,7 +114,7 @@ export default function Carrinho() {
       };
     }
     
-    const precoItem = item.tipo_venda === 'grade' ? item.preco_grade_completa : item.preco_unitario;
+    const precoItem = item.tipo_venda === 'grade' ? item.preco_grade_completa : item.preco_por_peca;
     const valorTotalItem = (precoItem || 0) * item.quantidade;
     
     acc[item.fornecedor_id].produtos.push(item);
@@ -161,7 +161,7 @@ export default function Carrinho() {
           produto_id: item.id,
           nome: item.nome,
           quantidade: item.quantidade,
-          preco_unitario: item.tipo_venda === 'grade' ? item.preco_grade_completa : item.preco_unitario,
+          preco_unitario: item.tipo_venda === 'grade' ? item.preco_grade_completa : item.preco_por_peca,
           tipo_venda: item.tipo_venda,
           grade_detalhada: item.grade_detalhada
         }));
@@ -247,7 +247,7 @@ export default function Carrinho() {
                 <CardContent>
                   <div className="space-y-4">
                     {grupo.produtos.map(item => {
-                      const precoItem = item.tipo_venda === 'grade' ? item.preco_grade_completa : item.preco_unitario;
+                      const precoItem = item.tipo_venda === 'grade' ? item.preco_grade_completa : item.preco_por_peca;
                       
                       return (
                         <div key={item.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">

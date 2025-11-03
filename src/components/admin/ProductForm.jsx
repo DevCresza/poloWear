@@ -29,7 +29,6 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
       quantidades_por_tamanho: {}
     },
     preco_por_peca: 0,
-    preco_unitario: 0,
     total_pecas_grade: 0,
     preco_grade_completa: 0,
     margem_lucro: 0,
@@ -157,8 +156,7 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
     setFormData(prev => ({
       ...prev,
       total_pecas_grade: totalPecas,
-      preco_grade_completa: precoGrade,
-      preco_unitario: prev.preco_por_peca // preco_unitario é o mesmo que preco_por_peca
+      preco_grade_completa: precoGrade
     }));
   };
 
@@ -167,8 +165,7 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
       const precoSugerido = formData.custo_por_peca * (1 + formData.margem_lucro / 100);
       setFormData(prev => ({
         ...prev,
-        preco_por_peca: parseFloat(precoSugerido.toFixed(2)),
-        preco_unitario: parseFloat(precoSugerido.toFixed(2))
+        preco_por_peca: parseFloat(precoSugerido.toFixed(2))
       }));
       calcularTotais(formData.grade_configuracao.quantidades_por_tamanho);
     }
@@ -510,7 +507,7 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
                       value={formData.preco_por_peca}
                       onChange={(e) => {
                         const novoPreco = parseFloat(e.target.value) || 0;
-                        setFormData({...formData, preco_por_peca: novoPreco, preco_unitario: novoPreco});
+                        setFormData({...formData, preco_por_peca: novoPreco});
                         calcularTotais(formData.grade_configuracao.quantidades_por_tamanho);
                       }}
                       required
