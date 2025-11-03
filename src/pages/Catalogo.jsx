@@ -617,7 +617,16 @@ export default function Catalogo() {
                         size="sm"
                         className="flex-1 bg-blue-600 text-white rounded-lg shadow-neumorphic-button active:shadow-neumorphic-button-inset"
                         disabled={produto.controla_estoque && !produto.permite_venda_sem_estoque && produto.estoque_atual_grades <= 0}
-                        onClick={() => handleAddToCart(produto)}
+                        onClick={() => {
+                          // Se o produto tem cores, abre o modal para seleção
+                          const temCores = (produto.composicao_grade?.cores && produto.composicao_grade.cores.length > 0) ||
+                                          (produto.cores_disponiveis && produto.cores_disponiveis.length > 0);
+                          if (temCores) {
+                            handleViewProduct(produto);
+                          } else {
+                            handleAddToCart(produto);
+                          }
+                        }}
                       >
                         <ShoppingCart className="w-4 h-4 mr-1" />
                         {produto.controla_estoque && !produto.permite_venda_sem_estoque && produto.estoque_atual_grades <= 0 ? 'Esgotado' : 'Adicionar'}

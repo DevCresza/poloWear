@@ -74,26 +74,26 @@ export default function Carrinho() {
     }
   };
 
-  const removerProduto = (produtoId) => {
-    const novoCarrinho = carrinho.filter(item => item.id !== produtoId);
+  const removerProduto = (itemIndex) => {
+    const novoCarrinho = carrinho.filter((_, index) => index !== itemIndex);
     salvarCarrinho(novoCarrinho);
   };
 
-  const alterarQuantidade = (produtoId, novaQuantidade) => {
+  const alterarQuantidade = (itemIndex, novaQuantidade) => {
     if (novaQuantidade <= 0) {
-      removerProduto(produtoId);
+      removerProduto(itemIndex);
       return;
     }
-    
-    const novoCarrinho = carrinho.map(item =>
-      item.id === produtoId 
+
+    const novoCarrinho = carrinho.map((item, index) =>
+      index === itemIndex
         ? { ...item, quantidade: novaQuantidade }
         : item
     );
     salvarCarrinho(novoCarrinho);
   };
 
-  const produtosPorFornecedor = carrinho.reduce((acc, item) => {
+  const produtosPorFornecedor = carrinho.reduce((acc, item, itemOriginalIndex) => {
     // Só processar se os fornecedores já foram carregados
     if (fornecedores.length === 0) {
       return acc;
@@ -113,13 +113,14 @@ export default function Carrinho() {
         valorTotal: 0
       };
     }
-    
+
     const precoItem = item.tipo_venda === 'grade' ? item.preco_grade_completa : item.preco_por_peca;
     const valorTotalItem = (precoItem || 0) * item.quantidade;
-    
-    acc[item.fornecedor_id].produtos.push(item);
+
+    // Adicionar o índice original do carrinho ao item
+    acc[item.fornecedor_id].produtos.push({ ...item, _carrinhoIndex: itemOriginalIndex });
     acc[item.fornecedor_id].valorTotal += valorTotalItem;
-    
+
     return acc;
   }, {});
 
@@ -246,18 +247,36 @@ export default function Carrinho() {
                 
                 <CardContent>
                   <div className="space-y-4">
-                    {grupo.produtos.map(item => {
+                    {grupo.produtos.map((item, itemIndex) => {
                       const precoItem = item.tipo_venda === 'grade' ? item.preco_grade_completa : item.preco_por_peca;
-                      
+                      // Criar uma key única que inclua as cores para diferenciar produtos com cores diferentes
+                      const itemKey = `${item.id}-${itemIndex}-${item.coresSelecionadas ? JSON.stringify(item.coresSelecionadas) : 'sem-cor'}`;
+
                       return (
-                        <div key={item.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                        <div key={itemKey} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
                           {item.fotos?.[0] && (
                             <img src={item.fotos[0]} alt={item.nome} className="w-16 h-16 object-cover rounded-lg" />
                           )}
-                          
+
                           <div className="flex-1">
                             <h3 className="font-semibold">{item.nome}</h3>
                             <p className="text-sm text-gray-600">{item.marca}</p>
+
+                            {/* Exibir cores selecionadas */}
+                            {item.coresSelecionadas && item.coresSelecionadas.length > 0 && (
+                              <div className="flex flex-wrap gap-2 mt-1 mb-2">
+                                {item.coresSelecionadas.map((cor, idx) => (
+                                  <Badge key={idx} variant="secondary" className="text-xs">
+                                    <div
+                                      className="w-3 h-3 rounded-full mr-1 border border-gray-300"
+                                      style={{ backgroundColor: cor.hexCode || '#000' }}
+                                    />
+                                    {cor.nome} ({cor.quantidade}x)
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+
                             <p className="text-lg font-bold text-green-600">R$ {(precoItem || 0).toFixed(2)}</p>
                             {item.tipo_venda === 'grade' && (
                               <Badge variant="outline">Grade completa • {item.total_pecas_grade} peças</Badge>
@@ -268,31 +287,31 @@ export default function Carrinho() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => alterarQuantidade(item.id, item.quantidade - 1)}
+                              onClick={() => alterarQuantidade(item._carrinhoIndex, item.quantidade - 1)}
                             >
                               <Minus className="w-4 h-4" />
                             </Button>
-                            
+
                             <Input
                               type="number"
                               min="1"
                               value={item.quantidade}
-                              onChange={(e) => alterarQuantidade(item.id, parseInt(e.target.value) || 1)}
+                              onChange={(e) => alterarQuantidade(item._carrinhoIndex, parseInt(e.target.value) || 1)}
                               className="w-20 text-center"
                             />
-                            
+
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => alterarQuantidade(item.id, item.quantidade + 1)}
+                              onClick={() => alterarQuantidade(item._carrinhoIndex, item.quantidade + 1)}
                             >
                               <Plus className="w-4 h-4" />
                             </Button>
-                            
+
                             <Button
                               variant="destructive"
                               size="sm"
-                              onClick={() => removerProduto(item.id)}
+                              onClick={() => removerProduto(item._carrinhoIndex)}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
