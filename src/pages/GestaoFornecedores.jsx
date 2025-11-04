@@ -5,7 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge'; // Added Badge import
-import { Building, Plus } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Building, Plus, Trash2 } from 'lucide-react';
 import FornecedorForm from '../components/admin/FornecedorForm';
 
 export default function GestaoFornecedores() {
@@ -13,6 +23,8 @@ export default function GestaoFornecedores() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingFornecedor, setEditingFornecedor] = useState(null);
+  const [fornecedorToDelete, setFornecedorToDelete] = useState(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
     loadFornecedores();
@@ -35,11 +47,35 @@ export default function GestaoFornecedores() {
     setEditingFornecedor(fornecedor);
     setShowForm(true);
   };
-  
+
   const handleSuccess = () => {
     setShowForm(false);
     setEditingFornecedor(null);
     loadFornecedores();
+  };
+
+  const handleDeleteClick = (fornecedor) => {
+    setFornecedorToDelete(fornecedor);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!fornecedorToDelete) return;
+
+    try {
+      await Fornecedor.delete(fornecedorToDelete.id);
+      setShowDeleteDialog(false);
+      setFornecedorToDelete(null);
+      loadFornecedores();
+    } catch (error) {
+      console.error("Erro ao excluir fornecedor:", error);
+      alert("Erro ao excluir fornecedor. Verifique se não há produtos ou pedidos vinculados a este fornecedor.");
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
+    setFornecedorToDelete(null);
   };
 
   return (
@@ -104,9 +140,18 @@ export default function GestaoFornecedores() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button variant="outline" size="sm" onClick={() => handleEdit(fornecedor)}>
-                          Editar
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => handleEdit(fornecedor)}>
+                            Editar
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteClick(fornecedor)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -116,6 +161,31 @@ export default function GestaoFornecedores() {
           </CardContent>
         </Card>
        )}
+
+      {/* Diálogo de Confirmação de Exclusão */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o fornecedor <strong>{fornecedorToDelete?.nome_marca}</strong>?
+              <br /><br />
+              Esta ação não pode ser desfeita. Certifique-se de que não há produtos ou pedidos vinculados a este fornecedor.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelDelete}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

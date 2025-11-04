@@ -362,16 +362,10 @@ export default function Catalogo() {
       const carrinhoSalvo = localStorage.getItem('carrinho');
       const carrinho = carrinhoSalvo ? JSON.parse(carrinhoSalvo) : [];
 
-      // Preparar o item para adicionar ao carrinho
-      const itemCarrinho = {
-        ...produto,
-        quantidade: 1
-      };
-
       // Se o produto tem composição de cores e há seleções
       if (coresProcessadas && coresProcessadas.length > 0 && getTotalGradesSelecionadas() > 0) {
         // Adicionar informações de cores selecionadas
-        itemCarrinho.coresSelecionadas = coresProcessadas
+        const coresSelecionadas = coresProcessadas
           .map((cor, index) => ({
             nome: cor.nome,
             hexCode: cor.hexCode,
@@ -379,24 +373,59 @@ export default function Catalogo() {
           }))
           .filter(cor => cor.quantidade > 0);
 
-        itemCarrinho.quantidadeTotalGrades = getTotalGradesSelecionadas();
-      } else {
-        // Usar quantidade padrão
-        itemCarrinho.quantidadeTotalGrades = quantidadeGrades;
+        const totalGrades = getTotalGradesSelecionadas();
+
+        // Preparar o item para adicionar ao carrinho COM CORES
+        const itemCarrinho = {
+          ...produto,
+          quantidade: totalGrades,
+          coresSelecionadas: coresSelecionadas,
+          quantidadeTotalGrades: totalGrades
+        };
+
+        // Verificar se produto similar já existe no carrinho (mesmo produto + mesmas cores)
+        const itemExistente = carrinho.find(item => {
+          if (item.id !== produto.id) return false;
+          if (!item.coresSelecionadas) return false;
+          return JSON.stringify(item.coresSelecionadas) === JSON.stringify(coresSelecionadas);
+        });
+
+        let novoCarrinho;
+        if (itemExistente) {
+          // Atualizar quantidade se já existe
+          novoCarrinho = carrinho.map(item =>
+            item === itemExistente
+              ? { ...item, quantidade: item.quantidade + totalGrades }
+              : item
+          );
+        } else {
+          // Adicionar novo produto ao carrinho
+          novoCarrinho = [...carrinho, itemCarrinho];
+        }
+
+        // Salvar no localStorage
+        localStorage.setItem('carrinho', JSON.stringify(novoCarrinho));
+
+        // Mostrar notificação de sucesso
+        showSuccessNotification(
+          `Produto "${produto.nome}" adicionado ao carrinho! (${totalGrades} ${totalGrades === 1 ? 'grade' : 'grades'})`
+        );
+
+        return;
       }
 
-      // Verificar se produto similar já existe no carrinho (mesmo produto + mesmas cores)
+      // Produto SEM cores selecionadas - usar quantidade padrão
+      const itemCarrinho = {
+        ...produto,
+        quantidade: quantidadeGrades,
+        quantidadeTotalGrades: quantidadeGrades
+      };
+
+      // Verificar se produto similar já existe no carrinho (mesmo produto SEM cores)
       const itemExistente = carrinho.find(item => {
         if (item.id !== produto.id) return false;
-
-        // Se não tem cores, é o mesmo produto
-        if (!item.coresSelecionadas && !itemCarrinho.coresSelecionadas) return true;
-
-        // Se um tem cores e outro não, são diferentes
-        if (!item.coresSelecionadas || !itemCarrinho.coresSelecionadas) return false;
-
-        // Comparar cores selecionadas
-        return JSON.stringify(item.coresSelecionadas) === JSON.stringify(itemCarrinho.coresSelecionadas);
+        // Só considerar igual se ambos não têm cores selecionadas
+        return !item.coresSelecionadas && !itemCarrinho.coresSelecionadas;
       });
 
       let novoCarrinho;
@@ -404,7 +433,7 @@ export default function Catalogo() {
         // Atualizar quantidade se já existe
         novoCarrinho = carrinho.map(item =>
           item === itemExistente
-            ? { ...item, quantidade: item.quantidade + 1 }
+            ? { ...item, quantidade: item.quantidade + quantidadeGrades }
             : item
         );
       } else {
@@ -416,9 +445,8 @@ export default function Catalogo() {
       localStorage.setItem('carrinho', JSON.stringify(novoCarrinho));
 
       // Mostrar notificação de sucesso
-      const totalGrades = itemCarrinho.quantidadeTotalGrades || 1;
       showSuccessNotification(
-        `Produto "${produto.nome}" adicionado ao carrinho! (${totalGrades} ${totalGrades === 1 ? 'grade' : 'grades'})`
+        `Produto "${produto.nome}" adicionado ao carrinho! (${quantidadeGrades} ${quantidadeGrades === 1 ? 'grade' : 'grades'})`
       );
 
     } catch (error) {

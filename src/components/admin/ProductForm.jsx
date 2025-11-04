@@ -84,9 +84,13 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
 
   useEffect(() => {
     loadFornecedores();
+  }, [loadFornecedores]);
+
+  useEffect(() => {
     if (produto) {
       setFormData({
         ...produto,
+        fornecedor_id: produto.fornecedor_id, // Garantir que o fornecedor_id seja preservado
         grade_configuracao: produto.grade_configuracao || {
           tamanhos_disponiveis: [],
           quantidades_por_tamanho: {}
@@ -96,7 +100,7 @@ export default function ProductForm({ produto, onSuccess, onCancel }) {
         fotos: produto.fotos || []
       });
     }
-  }, [produto, loadFornecedores]);
+  }, [produto]);
 
   const adicionarTamanho = (tamanho) => {
     const novosTamanhos = [...formData.grade_configuracao.tamanhos_disponiveis, tamanho];
