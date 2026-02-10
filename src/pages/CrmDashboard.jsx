@@ -14,7 +14,7 @@ import ArchiveConfirmModal from '../components/crm/ArchiveConfirmModal';
 import CrmHeader from '../components/crm/CrmHeader';
 import { useNotification } from '@/hooks/useNotification';
 import { Notification } from '@/components/ui/notification';
-import { Users, Clock, MessageCircle, CheckCircle, X, Archive } from 'lucide-react';
+import { Users, Clock, MessageCircle, CheckCircle, X, Archive, Download } from 'lucide-react';
 
 export default function CrmDashboard() {
   const [contacts, setContacts] = useState([]);
@@ -186,6 +186,97 @@ export default function CrmDashboard() {
     } finally {
       setShowArchiveConfirmModal(false);
       setSelectedContact(null);
+    }
+  };
+
+  const handleExportContacts = async () => {
+    try {
+      showInfo('Buscando todos os registros para exportação...');
+
+      // Buscar TODOS os registros diretamente do banco, sem depender do estado local
+      const allContactsResult = await Contact.find({
+        order: { column: 'created_at', ascending: false }
+      });
+      const allContacts = allContactsResult?.success ? allContactsResult.data : [];
+
+      if (!allContacts || allContacts.length === 0) {
+        showError('Nenhum lead encontrado para exportar');
+        return;
+      }
+
+      const headers = [
+        'Nome',
+        'Email',
+        'Telefone',
+        'Empresa',
+        'Cidade',
+        'Estado',
+        'Status',
+        'Fonte Lead',
+        'Faixa Faturamento',
+        'Tem Loja Física',
+        'Data Criação',
+        'Último Contato',
+        'Próxima Ação Data',
+        'Próxima Ação Descrição',
+        'Convertido em Cliente',
+        'Data Conversão',
+        'Código Cliente',
+        'Observações'
+      ];
+
+      const statusLabels = {
+        novo: 'Novo',
+        em_contato: 'Em Contato',
+        negociacao: 'Em Negociação',
+        convertido: 'Convertido',
+        cancelado: 'Cancelado',
+        finalizado: 'Finalizado'
+      };
+
+      const escapeField = (value) => {
+        const str = String(value || '');
+        return str.replace(/"/g, '""');
+      };
+
+      const csvContent = [
+        headers.join(';'),
+        ...allContacts.map(lead => [
+          escapeField(lead.nome),
+          escapeField(lead.email),
+          escapeField(lead.telefone),
+          escapeField(lead.empresa),
+          escapeField(lead.cidade),
+          escapeField(lead.estado),
+          escapeField(statusLabels[lead.status] || lead.status),
+          escapeField(lead.fonte_lead),
+          escapeField(lead.faixa_faturamento),
+          lead.tem_loja_fisica ? 'Sim' : 'Não',
+          lead.created_at ? new Date(lead.created_at).toLocaleDateString('pt-BR') : '',
+          lead.ultimo_contato ? new Date(lead.ultimo_contato).toLocaleDateString('pt-BR') : '',
+          lead.proxima_acao_data ? new Date(lead.proxima_acao_data).toLocaleDateString('pt-BR') : '',
+          escapeField(lead.proxima_acao_descricao),
+          lead.convertido_em_cliente ? 'Sim' : 'Não',
+          lead.data_conversao ? new Date(lead.data_conversao).toLocaleDateString('pt-BR') : '',
+          escapeField(lead.codigo_cliente_gerado),
+          escapeField((lead.observacoes || '').replace(/\n/g, ' '))
+        ].map(field => `"${field}"`).join(';'))
+      ].join('\n');
+
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `leads-polo-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+
+      showSuccess(`${allContacts.length} leads exportados com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao exportar leads:', error);
+      showError('Erro ao exportar leads. Tente novamente.');
     }
   };
 
@@ -374,8 +465,8 @@ export default function CrmDashboard() {
         filters={filters}
       />
 
-      {/* Botão para Leads Arquivados */}
-      <div className="px-6 py-3 border-b bg-gray-50">
+      {/* Botões de Ações */}
+      <div className="px-6 py-3 border-b bg-gray-50 flex gap-3">
         <Button
           variant="outline"
           onClick={() => setShowArchivedModal(true)}
@@ -383,6 +474,14 @@ export default function CrmDashboard() {
         >
           <Archive className="w-4 h-4 mr-2" />
           Ver Leads Arquivados
+        </Button>
+        <Button
+          variant="outline"
+          onClick={handleExportContacts}
+          className="text-green-600 hover:text-green-900 hover:bg-green-50"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Exportar Leads CSV
         </Button>
       </div>
 
