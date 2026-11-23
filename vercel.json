@@ -1,24 +1,13 @@
 {
-  "buildCommand": "npm run build",
+  "framework": null,
+  "installCommand": "echo sem-install",
+  "buildCommand": "mkdir -p dist && echo redirect > dist/index.html",
   "outputDirectory": "dist",
-  "framework": "vite",
-  "installCommand": "chmod +x vercel-prebuild.sh && ./vercel-prebuild.sh",
-  "routes": [
+  "redirects": [
     {
-      "src": "/assets/(.*)",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot))",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/:path*",
+      "destination": "https://www.portalpolowear.com.br/:path*",
+      "permanent": true
     }
   ]
 }
