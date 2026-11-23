@@ -1,12 +1,17 @@
 {
   "framework": null,
   "installCommand": "echo sem-install",
-  "buildCommand": "mkdir -p dist && echo redirect > dist/index.html",
+  "buildCommand": "mkdir -p dist && echo ok > dist/robots.txt",
   "outputDirectory": "dist",
   "redirects": [
     {
-      "source": "/:path*",
-      "destination": "https://www.portalpolowear.com.br/:path*",
+      "source": "/",
+      "destination": "https://www.portalpolowear.com.br/",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "destination": "https://www.portalpolowear.com.br/$1",
       "permanent": true
     }
   ]
